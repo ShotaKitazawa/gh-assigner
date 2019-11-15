@@ -56,7 +56,6 @@ func (r GitRepository) LabeledToIssue(url, person, label string) error {
 	// Create Body & Header
 	body, err := json.Marshal(domain.GitHubEditLabelRequest{
 		Assignees: []string{person},
-		State:     "open",
 		Labels:    []string{label},
 	})
 	if err != nil {
