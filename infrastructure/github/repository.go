@@ -14,7 +14,9 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
-func PostMessage(ctx context.Context, message string) error {
+type GitHubRepository struct{}
+
+func (r GitHubRepository) PostMessage(ctx context.Context, message string) error {
 	// Get Logger
 	logger := ctx.Value("logger").(interfaces.Logger)
 	logger.Info("PostMessage")

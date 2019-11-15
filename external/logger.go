@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/logging"
-	"github.com/gin-gonic/gin"
 )
 
 type Logger struct{}
@@ -44,35 +43,4 @@ type Message struct {
 	Source  string `json:"source"`
 	Method  string `json:"method"`
 	Path    string `json:"path"`
-}
-
-func Log() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
-
-		logger := Logger{}
-		c.Set("logger", logger)
-
-		c.Next()
-
-		latency := time.Since(start)
-		message := Message{
-			Status:  c.Writer.Status(),
-			Latency: int64(latency),
-			Source:  c.ClientIP(),
-			Method:  c.Request.Method,
-			Path:    c.Request.URL.Path,
-		}
-
-		entry := map[string]interface{}{
-			"time":     time.Now().Format(time.RFC3339Nano),
-			"severity": message.Status,
-			"message":  message,
-		}
-		b, err := json.Marshal(entry)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(string(b))
-	}
 }

@@ -6,32 +6,33 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/ShotaKitazawa/gh-assigner/controller/interfaces"
 	"github.com/ShotaKitazawa/gh-assigner/domain"
-	"github.com/ShotaKitazawa/gh-assigner/usecase"
 )
 
+type GitHubWebhookController struct {
+	Interactor interfaces.GitHubInteractor
+}
+
 // GitHubWebhookController is Controller
-func GitHubWebhookController(c *gin.Context) {
+func (controller GitHubWebhookController) PostWebhook(c *gin.Context) {
 	// Set gin.Context to context.Context
 	ctx := ginContext2standardContext(c, "logger", "db", "gh_user", "gh_token")
-
-	// Get Logger
-	logger := ctx.Value("logger").(Logger)
 
 	// Switch by Request Header
 	switch c.Request.Header.Get("X-GitHub-Event") {
 	case "pull_request":
 		request := domain.PullRequestEvent{}
-		c.Bind(&request)
+		err := c.Bind(&request)
+		if isInternalServerError(c, err) {
+			return
+		}
 		ctx = context.WithValue(ctx, "request", request)
 
 		switch request.Action {
 		case "opened", "reopened": // user Open/ReOpen PullRequest
-			res, err := usecase.MessagePullRequestOpened(ctx)
-			if err != nil {
-				//logger.Error(errors.Wrap(err, "GitHubWebhookController: cannot get data"))
-				logger.Error(err.Error())
-				c.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
+			res, err := controller.Interactor.MessagePullRequestOpened(ctx)
+			if isInternalServerError(c, err) {
 				return
 			}
 			c.JSON(http.StatusOK, res)
