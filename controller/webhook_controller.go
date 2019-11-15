@@ -11,12 +11,12 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 )
 
+// GitHubWebhookController is Controller
 type GitHubWebhookController struct {
 	Interactor interfaces.GitInteractor
 	Logger     interfaces.Logger
 }
 
-// GitHubWebhookController is Controller
 func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 
 	// Switch by Request Header
@@ -26,7 +26,7 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 		err := ctx.Bind(&request)
 		if err != nil {
 			c.Logger.Error(err.Error())
-			ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
+			ctx.JSON(http.StatusInternalServerError, err)
 			return
 		}
 		//ctx = context.WithValue(ctx, "request", request)
@@ -37,11 +37,16 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 			res, err := c.Interactor.OpenPullRequest(request)
 			if err != nil {
 				c.Logger.Error(err.Error())
-				ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
+				ctx.JSON(http.StatusInternalServerError, err)
 				return
 			}
 			ctx.JSON(http.StatusOK, res)
 			return
+		}
+	case "closed":
+		switch request.PullRequest.Merged {
+		case true: // TODO
+		case false: // TODO
 		}
 
 	case "issue_comment":
@@ -49,7 +54,7 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 		err := ctx.Bind(&request)
 		if err != nil {
 			c.Logger.Error(err.Error())
-			ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
+			ctx.JSON(http.StatusInternalServerError, err)
 			return
 		}
 		//ctx = context.WithValue(ctx, "request", request)
@@ -69,7 +74,7 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 				res, err := c.Interactor.CommentRequest(request)
 				if err != nil {
 					c.Logger.Error(err.Error())
-					ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
+					ctx.JSON(http.StatusInternalServerError, err)
 					return
 				}
 				ctx.JSON(http.StatusOK, res)
@@ -78,7 +83,7 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 				res, err := c.Interactor.CommentReviewed(request)
 				if err != nil {
 					c.Logger.Error(err.Error())
-					ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
+					ctx.JSON(http.StatusInternalServerError, err)
 					return
 				}
 				ctx.JSON(http.StatusOK, res)

@@ -3,7 +3,6 @@ package github
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
+// GitRepository is Repository
 type GitRepository struct {
 	User   string
 	Token  string
@@ -46,7 +46,7 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		r.Logger.Error(string(respBody))
-		return errors.New(fmt.Sprintf("Response status is %d, expected %d", resp.StatusCode, http.StatusCreated))
+		return fmt.Errorf("Response status is %d, expected %d", resp.StatusCode, http.StatusCreated)
 	}
 
 	return nil
@@ -82,7 +82,7 @@ func (r GitRepository) LabeledToIssue(url, person, label string) error {
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		r.Logger.Error(string(respBody))
-		return errors.New(fmt.Sprintf("Response status is %d, expected %d", resp.StatusCode, http.StatusOK))
+		return fmt.Errorf("Response status is %d, expected %d", resp.StatusCode, http.StatusOK)
 	}
 
 	return nil

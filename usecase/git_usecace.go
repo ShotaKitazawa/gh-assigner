@@ -5,6 +5,7 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/usecase/interfaces"
 )
 
+// GitInteractor is Interactor
 type GitInteractor struct {
 	GitRepository      interfaces.GitRepository
 	DatabaseRepository interfaces.DatabaseRepository
@@ -13,8 +14,8 @@ type GitInteractor struct {
 }
 
 const (
-	request_label  = "review"
-	reviewed_label = "wip"
+	requestLabel  = "review"
+	reviewedLabel = "wip"
 )
 
 func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
@@ -47,7 +48,7 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 	//err = i.GitRepository.LabeledToIssue(issueComment.PullRequest.IssueURL, person, "review")
 
 	// Labeled "review" & assign user to PullRequest
-	err = i.GitRepository.LabeledToIssue(issueComment.Issue.URL, "ShotaKitazawa", request_label)
+	err = i.GitRepository.LabeledToIssue(issueComment.Issue.URL, "ShotaKitazawa", requestLabel)
 	if err != nil {
 		return
 	}
@@ -59,7 +60,7 @@ func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (r
 	person := issueComment.Issue.User.Login
 
 	// Labeled "wip" & assign user to PullRequest
-	err = i.GitRepository.LabeledToIssue(issueComment.Issue.URL, person, reviewed_label)
+	err = i.GitRepository.LabeledToIssue(issueComment.Issue.URL, person, reviewedLabel)
 	if err != nil {
 		return
 	}

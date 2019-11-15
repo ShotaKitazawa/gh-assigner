@@ -8,23 +8,29 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
+// DatabaseRepository is Repository
 type DatabaseRepository struct {
 	DB     *sqlx.DB
 	Logger interfaces.Logger
 }
 
-func (r DatabaseRepository) CreatePullRequest(issue_id int, title, username, url string) error {
+func (r DatabaseRepository) CreatePullRequest(issueID int, title, username, url string) error {
+	// TODO
 	return nil
 }
-func (r DatabaseRepository) CreateRequestAction(issue_id int, username string) error {
+func (r DatabaseRepository) CreateRequestAction(issueID int, username string) error {
+	// TODO
 	return nil
 }
-func (r DatabaseRepository) CreateReviewedAction(issue_id int, username string) error {
+func (r DatabaseRepository) CreateReviewedAction(issueID int, username string) error {
+	// TODO
 	return nil
 }
 func (r DatabaseRepository) CreateUser(username string) error {
+	// TODO
 	return nil
 }
-func (r DatabaseRepository) GetPullRequestTTL(issue_id int) (time.Duration, error) {
+func (r DatabaseRepository) GetPullRequestTTL(issueID int) (time.Duration, error) {
+	// TODO
 	return 0, nil
 }
