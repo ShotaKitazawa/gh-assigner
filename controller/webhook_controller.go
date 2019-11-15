@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,42 +12,49 @@ import (
 )
 
 type GitHubWebhookController struct {
-	Interactor interfaces.GitHubInteractor
+	Interactor interfaces.GitInteractor
+	Logger     interfaces.Logger
 }
 
 // GitHubWebhookController is Controller
-func (controller GitHubWebhookController) PostWebhook(c *gin.Context) {
-	// Set gin.Context to context.Context
-	ctx := ginContext2standardContext(c, "logger", "db", "gh_user", "gh_token")
+func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 
 	// Switch by Request Header
-	switch c.Request.Header.Get("X-GitHub-Event") {
+	switch ctx.Request.Header.Get("X-GitHub-Event") {
 	case "pull_request":
 		request := domain.PullRequestEvent{}
-		err := c.Bind(&request)
-		if isInternalServerError(c, err) {
+		err := ctx.Bind(&request)
+		if err != nil {
+			c.Logger.Error(err.Error())
+			ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
 			return
 		}
-		ctx = context.WithValue(ctx, "request", request)
+		//ctx = context.WithValue(ctx, "request", request)
 
+		// Switch by Request Body
 		switch request.Action {
 		case "opened", "reopened": // user Open/ReOpen PullRequest
-			res, err := controller.Interactor.OpenPullRequest(ctx)
-			if isInternalServerError(c, err) {
+			res, err := c.Interactor.OpenPullRequest(request)
+			if err != nil {
+				c.Logger.Error(err.Error())
+				ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
 				return
 			}
-			c.JSON(http.StatusOK, res)
+			ctx.JSON(http.StatusOK, res)
 			return
 		}
 
 	case "issue_comment":
 		request := domain.IssueCommentEvent{}
-		err := c.Bind(&request)
-		if isInternalServerError(c, err) {
+		err := ctx.Bind(&request)
+		if err != nil {
+			c.Logger.Error(err.Error())
+			ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
 			return
 		}
-		ctx = context.WithValue(ctx, "request", request)
+		//ctx = context.WithValue(ctx, "request", request)
 
+		// Switch by Request Body
 		switch request.Action {
 		case "created": // User created Comment in PullRequest
 			command := trimNewlineChar(request.Comment.Body)
@@ -55,22 +62,30 @@ func (controller GitHubWebhookController) PostWebhook(c *gin.Context) {
 				return
 			}
 			commands := strings.Split(strings.TrimLeft(command, "/"), " ")
+
+			// Switch by command
 			switch commands[0] {
 			case "request":
-				res, err := controller.Interactor.CommentRequest(ctx)
-				if isInternalServerError(c, err) {
+				res, err := c.Interactor.CommentRequest(request)
+				if err != nil {
+					c.Logger.Error(err.Error())
+					ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
 					return
 				}
-				c.JSON(http.StatusOK, res)
+				ctx.JSON(http.StatusOK, res)
 				return
 			case "reviewed":
-				res, err := controller.Interactor.CommentReviewed(ctx)
-				if isInternalServerError(c, err) {
+				res, err := c.Interactor.CommentReviewed(request)
+				if err != nil {
+					c.Logger.Error(err.Error())
+					ctx.JSON(http.StatusInternalServerError, NewError(http.StatusInternalServerError, err.Error()))
 					return
 				}
-				c.JSON(http.StatusOK, res)
+				ctx.JSON(http.StatusOK, res)
 				return
 			}
 		}
+	default:
+		c.Logger.Info(fmt.Sprintf("X-GitHub-Event: %s: Skiped.", ctx.Request.Header.Get("X-GitHub-Event")))
 	}
 }

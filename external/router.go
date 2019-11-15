@@ -11,21 +11,18 @@ import (
 )
 
 var (
-	ctx context.Context
-	db  *sqlx.DB
+	db *sqlx.DB
 )
 
-func Run(c context.Context) {
-	ctx = c
+func Run(ctx context.Context) {
 
 	r := gin.New()
-	//r.Use(gin.Recovery(), DB(), Log(), Slack(), GitHub())
-	r.Use(gin.Recovery(), DB(), Log(), GitHub())
+	r.Use(gin.Recovery(), Log())
+
+	githubWebhookController := NewGitHubWebhookController(ctx)
 	defer db.Close()
 
-	githubController := NewGitHubController()
-
-	r.POST("/", func(c *gin.Context) { githubController.PostWebhook(c) })
+	r.POST("/", func(c *gin.Context) { githubWebhookController.PostWebhook(c) })
 
 	host := getContext(ctx, "host").(string)
 	r.Run(host)

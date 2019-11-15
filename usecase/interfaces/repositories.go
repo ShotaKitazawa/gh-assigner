@@ -1,15 +1,22 @@
 package interfaces
 
 import (
-	"context"
+	"time"
 )
 
 type GitRepository interface {
-	PostMessageToIssue(context.Context, string) error
-	GetPersonToOpenPullRequest(context.Context) (string, error)
-	LabeledToIssue(context.Context, string, string) error
+	PostMessageToIssue(string, string) error
+	LabeledToIssue(string, string, string) error
 }
 
 type CalendarRepository interface {
 	GetStaffThisWeek() (string, error)
+}
+
+type DatabaseRepository interface {
+	CreatePullRequest(int, string, string, string) error
+	CreateRequestAction(int, string) error
+	CreateReviewedAction(int, string) error
+	CreateUser(string) error
+	GetPullRequestTTL(int) (time.Duration, error)
 }

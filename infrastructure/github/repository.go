@@ -2,7 +2,6 @@ package github
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,19 +13,13 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
-type GitRepository struct{}
+type GitRepository struct {
+	User   string
+	Token  string
+	Logger interfaces.Logger
+}
 
-func (r GitRepository) PostMessageToIssue(ctx context.Context, message string) error {
-	// Get Logger
-	logger := ctx.Value("logger").(interfaces.Logger)
-
-	// Get requested URL
-	url := ctx.Value("request").(domain.PullRequestEvent).PullRequest.IssueURL
-
-	// Get GitHub User & Token
-	ghUser := ctx.Value("gh_user").(string)
-	ghToken := ctx.Value("gh_token").(string)
-
+func (r GitRepository) PostMessageToIssue(url, message string) error {
 	// Create Body & Header
 	body, err := json.Marshal(domain.GitHubPostMessageRequest{Body: message})
 	if err != nil {
@@ -39,7 +32,7 @@ func (r GitRepository) PostMessageToIssue(ctx context.Context, message string) e
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(ghUser, ghToken)
+	req.SetBasicAuth(r.User, r.Token)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Request
@@ -52,30 +45,14 @@ func (r GitRepository) PostMessageToIssue(ctx context.Context, message string) e
 	// Check response
 	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
-		logger.Error(string(respBody))
-		return errors.New(fmt.Sprintf("Response status is %d, expected 201", resp.StatusCode))
+		r.Logger.Error(string(respBody))
+		return errors.New(fmt.Sprintf("Response status is %d, expected %d", resp.StatusCode, http.StatusCreated))
 	}
 
 	return nil
 }
 
-func (r GitRepository) GetPersonToOpenPullRequest(ctx context.Context) (string, error) {
-	// Get requested URL
-	result := ctx.Value("request").(domain.IssueCommentEvent).Issue.User.Login
-	return result, nil
-}
-
-func (r GitRepository) LabeledToIssue(ctx context.Context, person, label string) error {
-	// Get Logger
-	logger := ctx.Value("logger").(interfaces.Logger)
-
-	// Get requested URL
-	url := ctx.Value("request").(domain.IssueCommentEvent).Issue.URL
-
-	// Get GitHub User & Token
-	ghUser := ctx.Value("gh_user").(string)
-	ghToken := ctx.Value("gh_token").(string)
-
+func (r GitRepository) LabeledToIssue(url, person, label string) error {
 	// Create Body & Header
 	body, err := json.Marshal(domain.GitHubEditLabelRequest{
 		Assignees: []string{person},
@@ -92,7 +69,7 @@ func (r GitRepository) LabeledToIssue(ctx context.Context, person, label string)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(ghUser, ghToken)
+	req.SetBasicAuth(r.User, r.Token)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Request
@@ -103,10 +80,10 @@ func (r GitRepository) LabeledToIssue(ctx context.Context, person, label string)
 	}
 
 	// Check response
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
-		logger.Error(string(respBody))
-		return errors.New(fmt.Sprintf("Response status is %d, expected 201", resp.StatusCode))
+		r.Logger.Error(string(respBody))
+		return errors.New(fmt.Sprintf("Response status is %d, expected %d", resp.StatusCode, http.StatusOK))
 	}
 
 	return nil
