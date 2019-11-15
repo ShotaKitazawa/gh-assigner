@@ -28,7 +28,8 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 	req, err := http.NewRequest(
 		"POST",
 		url+"/comments",
-		bytes.NewBuffer(body))
+		bytes.NewBuffer(body),
+	)
 	if err != nil {
 		return err
 	}
@@ -64,7 +65,8 @@ func (r GitRepository) LabeledToIssue(url, person, label string) error {
 	req, err := http.NewRequest(
 		"PATCH",
 		url,
-		bytes.NewBuffer(body))
+		bytes.NewBuffer(body),
+	)
 	if err != nil {
 		return err
 	}

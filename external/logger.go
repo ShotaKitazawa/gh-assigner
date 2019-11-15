@@ -51,9 +51,6 @@ func Log() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
-		logger := Logger{}
-		c.Set("logger", logger)
-
 		c.Next()
 
 		latency := time.Since(start)

@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/ShotaKitazawa/gh-assigner/controller/interfaces"
 	"github.com/ShotaKitazawa/gh-assigner/domain"
+	"github.com/gin-gonic/gin"
 )
 
 // GitHubWebhookController is Controller
@@ -17,19 +16,19 @@ type GitHubWebhookController struct {
 	Logger     interfaces.Logger
 }
 
-func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
+// PostWebhook is called by GitHub Webhook
+func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 
 	// Switch by Request Header
 	switch ctx.Request.Header.Get("X-GitHub-Event") {
 	case "pull_request":
 		request := domain.PullRequestEvent{}
-		err := ctx.Bind(&request)
+		err = ctx.Bind(&request)
 		if err != nil {
 			c.Logger.Error(err.Error())
 			ctx.JSON(http.StatusInternalServerError, err)
-			return
+			return err
 		}
-		//ctx = context.WithValue(ctx, "request", request)
 
 		// Switch by Request Body
 		switch request.Action {
@@ -38,15 +37,14 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 			if err != nil {
 				c.Logger.Error(err.Error())
 				ctx.JSON(http.StatusInternalServerError, err)
-				return
+				return err
 			}
 			ctx.JSON(http.StatusOK, res)
-			return
-		}
-	case "closed":
-		switch request.PullRequest.Merged {
-		case true: // TODO
-		case false: // TODO
+		case "closed":
+			switch request.PullRequest.Merged {
+			case true: // TODO
+			case false: // TODO
+			}
 		}
 
 	case "issue_comment":
@@ -55,16 +53,15 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 		if err != nil {
 			c.Logger.Error(err.Error())
 			ctx.JSON(http.StatusInternalServerError, err)
-			return
+			return err
 		}
-		//ctx = context.WithValue(ctx, "request", request)
 
 		// Switch by Request Body
 		switch request.Action {
 		case "created": // User created Comment in PullRequest
 			command := trimNewlineChar(request.Comment.Body)
 			if !strings.HasPrefix(command, "/") {
-				return
+				return nil
 			}
 			commands := strings.Split(strings.TrimLeft(command, "/"), " ")
 
@@ -75,22 +72,21 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) {
 				if err != nil {
 					c.Logger.Error(err.Error())
 					ctx.JSON(http.StatusInternalServerError, err)
-					return
+					return err
 				}
 				ctx.JSON(http.StatusOK, res)
-				return
 			case "reviewed":
 				res, err := c.Interactor.CommentReviewed(request)
 				if err != nil {
 					c.Logger.Error(err.Error())
 					ctx.JSON(http.StatusInternalServerError, err)
-					return
+					return err
 				}
 				ctx.JSON(http.StatusOK, res)
-				return
 			}
 		}
 	default:
 		c.Logger.Info(fmt.Sprintf("X-GitHub-Event: %s: Skiped.", ctx.Request.Header.Get("X-GitHub-Event")))
 	}
+	return nil
 }
