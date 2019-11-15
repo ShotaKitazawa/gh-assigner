@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/ShotaKitazawa/gh-assigner/controller/interfaces"
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,13 @@ func ginContext2standardContext(c *gin.Context, args ...string) context.Context 
 		ctx = context.WithValue(ctx, val, inter)
 	}
 	return ctx
+}
+
+func trimNewlineChar(str string) string {
+	str = strings.Replace(str, "\n", " ", -1)
+	str = strings.Replace(str, "\r", " ", -1)
+	str = strings.Replace(str, "\r\n", " ", -1)
+	return str
 }
 
 func isInternalServerError(c *gin.Context, err error) bool {

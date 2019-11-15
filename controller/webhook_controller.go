@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -31,7 +32,7 @@ func (controller GitHubWebhookController) PostWebhook(c *gin.Context) {
 
 		switch request.Action {
 		case "opened", "reopened": // user Open/ReOpen PullRequest
-			res, err := controller.Interactor.MessagePullRequestOpened(ctx)
+			res, err := controller.Interactor.OpenPullRequest(ctx)
 			if isInternalServerError(c, err) {
 				return
 			}
@@ -41,10 +42,35 @@ func (controller GitHubWebhookController) PostWebhook(c *gin.Context) {
 
 	case "issue_comment":
 		request := domain.IssueCommentEvent{}
-		c.Bind(&request)
+		err := c.Bind(&request)
+		if isInternalServerError(c, err) {
+			return
+		}
+		ctx = context.WithValue(ctx, "request", request)
+
 		switch request.Action {
 		case "created": // User created Comment in PullRequest
-			// TODO comment.body よりコメント内容に応じた処理
+			command := trimNewlineChar(request.Comment.Body)
+			if !strings.HasPrefix(command, "/") {
+				return
+			}
+			commands := strings.Split(strings.TrimLeft(command, "/"), " ")
+			switch commands[0] {
+			case "request":
+				res, err := controller.Interactor.CommentRequest(ctx)
+				if isInternalServerError(c, err) {
+					return
+				}
+				c.JSON(http.StatusOK, res)
+				return
+			case "reviewed":
+				res, err := controller.Interactor.CommentReviewed(ctx)
+				if isInternalServerError(c, err) {
+					return
+				}
+				c.JSON(http.StatusOK, res)
+				return
+			}
 		}
 	}
 }

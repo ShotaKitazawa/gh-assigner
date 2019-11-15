@@ -9,7 +9,7 @@ import (
 func NewGitHubController() *controller.GitHubWebhookController {
 	return &controller.GitHubWebhookController{
 		Interactor: usecase.GitHubInteractor{
-			GitHubRepository: &github.GitHubRepository{},
+			GitRepository: &github.GitRepository{},
 		},
 	}
 }

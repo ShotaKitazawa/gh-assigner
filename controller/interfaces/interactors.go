@@ -7,5 +7,7 @@ import (
 )
 
 type GitHubInteractor interface {
-	MessagePullRequestOpened(context.Context) (domain.PullRequestEventResponse, error)
+	OpenPullRequest(context.Context) (domain.PullRequestEventResponse, error)
+	CommentRequest(context.Context) (domain.PullRequestEventResponse, error)
+	CommentReviewed(context.Context) (domain.PullRequestEventResponse, error)
 }
