@@ -10,11 +10,12 @@ type GitRepository interface {
 }
 
 type DatabaseRepository interface {
-	CreatePullRequest(int, string, string, string) error
-	CreateRequestAction(int, string) error
-	CreateReviewedAction(int, string) error
-	CreateUser(string) error
-	GetPullRequestTTL(int) (time.Duration, error)
+	CreatePullRequest(uint, uint, uint, string) error
+	CreateRequestAction(uint, uint, uint) error
+	CreateReviewedAction(uint, uint, uint) error
+	CreateUserIfNotExists(string) (uint, error)
+	CreateRepositoryIfNotExists(string, string) (uint, error)
+	GetPullRequestTTL(uint) (time.Duration, error)
 }
 
 type CalendarRepository interface {

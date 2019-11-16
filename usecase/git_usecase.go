@@ -24,13 +24,19 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 	person := pullRequest.Sender.Login
 
 	// Create User record if not exists
-	err = i.DatabaseRepository.CreateUser(person)
+	userID, err := i.DatabaseRepository.CreateUserIfNotExists(person)
+	if err != nil {
+		return
+	}
+
+	// Create Repository record if not exists
+	repositoryID, err := i.DatabaseRepository.CreateRepositoryIfNotExists(pullRequest.Repository.Owner.Login, pullRequest.Repository.Name)
 	if err != nil {
 		return
 	}
 
 	// Create PullRequest record
-	err = i.DatabaseRepository.CreatePullRequest(pullRequest.PullRequest.ID, pullRequest.PullRequest.Title, pullRequest.PullRequest.HTMLURL, person)
+	err = i.DatabaseRepository.CreatePullRequest(userID, repositoryID, uint(pullRequest.PullRequest.Number), pullRequest.PullRequest.Title)
 	if err != nil {
 		return
 	}
@@ -45,12 +51,35 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 
 // CommentRequest is usecase
 func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// TODO カレンダーから担当者を取ってくる
+	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に review ラベルが付いてるならreturnする
+
+	// TODO: カレンダーから担当者を取ってくる
 	//person, err := i.CalendarRepository.GetStaffThisWeek()
 	//err = i.GitRepository.LabelToIssue(issueComment.PullRequest.IssueURL, person, "review")
+	person := "ShotaKitazawa"
+
+	// Create User record if not exists
+	userID, err := i.DatabaseRepository.CreateUserIfNotExists(person)
+	if err != nil {
+		return
+	}
+
+	// Create Repository record if not exists
+	repositoryID, err := i.DatabaseRepository.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
+	if err != nil {
+		return
+	}
+
+	// Create RequestAction record
+	err = i.DatabaseRepository.CreateRequestAction(userID, repositoryID, uint(issueComment.Issue.Number))
+	if err != nil {
+		return
+	}
+
+	// TODO: DB の pullrequests table の state カラムの update
 
 	// Labeled "review" & assign user to PullRequest
-	err = i.GitRepository.LabelToIssue(issueComment.Issue.URL, "ShotaKitazawa", requestLabel)
+	err = i.GitRepository.LabelToIssue(issueComment.Issue.URL, person, requestLabel)
 	if err != nil {
 		return
 	}
@@ -59,8 +88,30 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 
 // CommentReviewed is usecase
 func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
+	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に wip ラベルが付いてるならreturnする
+
 	// User to open PullRequest
 	person := issueComment.Issue.User.Login
+
+	// Create User record if not exists
+	userID, err := i.DatabaseRepository.CreateUserIfNotExists(person)
+	if err != nil {
+		return
+	}
+
+	// Create Repository record if not exists
+	repositoryID, err := i.DatabaseRepository.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
+	if err != nil {
+		return
+	}
+
+	// Create RequestAction record
+	err = i.DatabaseRepository.CreateReviewedAction(userID, repositoryID, uint(issueComment.Issue.Number))
+	if err != nil {
+		return
+	}
+
+	// TODO: DB の pullrequests table の state カラムの update
 
 	// Labeled "wip" & assign user to PullRequest
 	err = i.GitRepository.LabelToIssue(issueComment.Issue.URL, person, reviewedLabel)

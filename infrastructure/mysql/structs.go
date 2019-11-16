@@ -12,11 +12,13 @@ type User struct {
 // Issue is MySQL pullrequests Table
 type Issue struct {
 	ID        uint       `db:"id"`
-	Title     string     `db:"title"`
+	IssueID   uint       `db:"issue_id"`
 	UserID    uint       `db:"user_id"`
-	OpenedAt  *time.Time `db:"opened_at"`
-	MergedAt  *time.Time `db:"merged_at"`
+	Title     string     `db:"title"`
+	URL       string     `db:"url"`
+	State     string     `db:"state"`
 	CreatedAt *time.Time `db:"created_at"`
+	ClosedAt  *time.Time `db:"closed_at"`
 }
 
 // RequestAction is MySQL request_actions Table

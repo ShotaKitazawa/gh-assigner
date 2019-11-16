@@ -30,23 +30,27 @@ func (r GitRepositoryMock) LabelToIssue(url, person, label string) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreatePullRequest(issueID int, title, username, url string) error {
+func (r DatabaseRepositoryMock) CreatePullRequest(userID, repositoryID, issueID uint, title string) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreateRequestAction(issueID int, username string) error {
+func (r DatabaseRepositoryMock) CreateRequestAction(userID, repositoryID, issueID uint) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreateReviewedAction(issueID int, username string) error {
+func (r DatabaseRepositoryMock) CreateReviewedAction(userID, repositoryID, issueID uint) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreateUser(username string) error {
+func (r DatabaseRepositoryMock) CreateUserIfNotExists(username string) (uint, error) {
 	// TODO
-	return nil
+	return 0, nil
 }
-func (r DatabaseRepositoryMock) GetPullRequestTTL(issueID int) (time.Duration, error) {
+func (r DatabaseRepositoryMock) CreateRepositoryIfNotExists(organication, repository string) (uint, error) {
+	// TODO
+	return 0, nil
+}
+func (r DatabaseRepositoryMock) GetPullRequestTTL(issueID uint) (time.Duration, error) {
 	// TODO
 	return 0, nil
 }
