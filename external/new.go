@@ -47,5 +47,6 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 			*/
 			Logger: &Logger{},
 		},
+		Logger: &Logger{},
 	}
 }
