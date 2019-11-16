@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" //justifying
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -14,6 +14,7 @@ var (
 	db *sqlx.DB
 )
 
+// Run is entrypoint
 func Run(ctx context.Context) {
 
 	r := gin.New()

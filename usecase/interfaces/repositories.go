@@ -6,7 +6,7 @@ import (
 
 type GitRepository interface {
 	PostMessageToIssue(string, string) error
-	LabeledToIssue(string, string, string) error
+	LabelToIssue(string, string, string) error
 }
 
 type CalendarRepository interface {

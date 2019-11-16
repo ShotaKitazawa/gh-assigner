@@ -10,17 +10,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Logger is struct for using Debug/Info/Warn/Error methods.
+// Those methods is custumize for Google Stackdriver
 type Logger struct{}
 
+// Debug is debug message (severity 100)
 func (logger Logger) Debug(args ...interface{}) {
 	logger.log(int(logging.Debug), args...)
 }
+
+// Info is information message (severity 200)
 func (logger Logger) Info(args ...interface{}) {
 	logger.log(int(logging.Info), args...)
 }
+
+// Warn is warning message (severity 400)
 func (logger Logger) Warn(args ...interface{}) {
 	logger.log(int(logging.Warning), args...)
 }
+
+// Error is error message (severity 500)
 func (logger Logger) Error(args ...interface{}) {
 	logger.log(int(logging.Error), args...)
 }
@@ -38,16 +47,15 @@ func (logger Logger) log(severity int, args ...interface{}) {
 	fmt.Println(string(b))
 }
 
-type Message struct {
-	Status  int    `json:"status"`
-	Latency int64  `json:"latency"`
-	Source  string `json:"source"`
-	Method  string `json:"method"`
-	Path    string `json:"path"`
-}
-
 // Log is set gin.Context, using everywhere
 func Log() gin.HandlerFunc {
+	type Message struct {
+		Status  int    `json:"status"`
+		Latency int64  `json:"latency"`
+		Source  string `json:"source"`
+		Method  string `json:"method"`
+		Path    string `json:"path"`
+	}
 	return func(c *gin.Context) {
 		start := time.Now()
 

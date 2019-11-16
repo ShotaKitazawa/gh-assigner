@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// NewGitHubWebhookController is initialize Controller, Interactor and Repositories.
 func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookController {
 	var err error
 

@@ -19,6 +19,7 @@ type GitRepository struct {
 	Logger interfaces.Logger
 }
 
+// PostMessageToIssue is Repository that post message to GitHub Issue/PullRequest.
 func (r GitRepository) PostMessageToIssue(url, message string) error {
 	// Create Body & Header
 	body, err := json.Marshal(domain.GitHubPostMessageRequest{Body: message})
@@ -53,7 +54,8 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 	return nil
 }
 
-func (r GitRepository) LabeledToIssue(url, person, label string) error {
+// LabelToIssue is Repository that label to GitHub Issue/PullRequest.
+func (r GitRepository) LabelToIssue(url, person, label string) error {
 	// Create Body & Header
 	body, err := json.Marshal(domain.GitHubEditLabelRequest{
 		Assignees: []string{person},
