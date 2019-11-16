@@ -47,10 +47,17 @@ func (i InteractorMock) CommentReviewed(domain.IssueCommentEvent) (domain.PullRe
 }
 
 func TestGitHubWebhookController(t *testing.T) {
+	// Initialize
+	t.Parallel()
+	gin.SetMode(gin.TestMode)
+
 	t.Run("PostWebhook()", func(t *testing.T) {
+		// Initialize
+		t.Parallel()
+
 		t.Run("PullRequestをOpenするとinteractor.OpenPullRequest()が呼ばれることのテスト", func(t *testing.T) {
 			// Initialize
-			gin.SetMode(gin.TestMode)
+			t.Parallel()
 			responseWriter := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
@@ -58,14 +65,13 @@ func TestGitHubWebhookController(t *testing.T) {
 			body, err := json.Marshal(domain.PullRequestEvent{
 				Action: "opened",
 			})
-			if err != nil {
-				panic(err)
-			}
+			assert.Nil(t, err)
 			req, err := http.NewRequest(
 				"POST",
 				"http://localhost:8080/",
 				bytes.NewBuffer(body),
 			)
+			assert.Nil(t, err)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("X-GitHub-Event", "pull_request")
 			ctx.Request = req
@@ -80,7 +86,7 @@ func TestGitHubWebhookController(t *testing.T) {
 		})
 		t.Run("PullRequestに'/request'とCommentするとinteractor.CommentRequest()が呼ばれることのテスト", func(t *testing.T) {
 			// Initialize
-			gin.SetMode(gin.TestMode)
+			t.Parallel()
 			responseWriter := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
@@ -89,14 +95,13 @@ func TestGitHubWebhookController(t *testing.T) {
 				Action:  "created",
 				Comment: GitHubComment{Body: "/request"},
 			})
-			if err != nil {
-				panic(err)
-			}
+			assert.Nil(t, err)
 			req, err := http.NewRequest(
 				"POST",
 				"http://localhost:8080/",
 				bytes.NewBuffer(body),
 			)
+			assert.Nil(t, err)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("X-GitHub-Event", "issue_comment")
 			ctx.Request = req
@@ -111,7 +116,7 @@ func TestGitHubWebhookController(t *testing.T) {
 		})
 		t.Run("PullRequestに'/reviewed'とCommentするとinteractor.CommentReviewed()が呼ばれることのテスト", func(t *testing.T) {
 			// Initialize
-			gin.SetMode(gin.TestMode)
+			t.Parallel()
 			responseWriter := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
@@ -120,14 +125,13 @@ func TestGitHubWebhookController(t *testing.T) {
 				Action:  "created",
 				Comment: GitHubComment{Body: "/reviewed"},
 			})
-			if err != nil {
-				panic(err)
-			}
+			assert.Nil(t, err)
 			req, err := http.NewRequest(
 				"POST",
 				"http://localhost:8080/",
 				bytes.NewBuffer(body),
 			)
+			assert.Nil(t, err)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("X-GitHub-Event", "issue_comment")
 			ctx.Request = req
@@ -140,9 +144,15 @@ func TestGitHubWebhookController(t *testing.T) {
 			assert.Equal(t, flagCommentReviewed, true)
 			assert.Equal(t, responseWriter.Code, http.StatusOK)
 		})
+		t.Run("リポジトリのPushをしても何も発火しないことのテスト", func(t *testing.T) {
+			// TODO
+		})
 	})
 	t.Run("trimNewlineChar()", func(t *testing.T) {
+		t.Parallel()
 		t.Run("改行や余分な空白が取り除かれているテスト", func(t *testing.T) {
+			t.Parallel()
+
 			expected := "hoge fuga piyo"
 			actual := trimNewlineChar(`hoge
 fuga
