@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ShotaKitazawa/gh-assigner/domain"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
@@ -22,7 +21,7 @@ type GitRepository struct {
 // PostMessageToIssue is Repository that post message to GitHub Issue/PullRequest.
 func (r GitRepository) PostMessageToIssue(url, message string) error {
 	// Create Body & Header
-	body, err := json.Marshal(domain.GitHubPostMessageRequest{Body: message})
+	body, err := json.Marshal(PostMessageRequest{Body: message})
 	if err != nil {
 		return err
 	}
@@ -56,7 +55,7 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 // LabelToIssue is Repository that label to GitHub Issue/PullRequest.
 func (r GitRepository) LabelToIssue(url, person, label string) error {
 	// Create Body & Header
-	body, err := json.Marshal(domain.GitHubEditLabelRequest{
+	body, err := json.Marshal(EditLabelRequest{
 		Assignees: []string{person},
 		Labels:    []string{label},
 	})

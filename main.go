@@ -28,7 +28,7 @@ var rootCmd = &cobra.Command{
 			viper.GetString("db-password"),
 			viper.GetString("db-host"),
 			viper.GetUint("db-port"),
-			"sample",
+			viper.GetString("db-table-name"),
 		)
 		ctx = context.Background()
 		ctx = context.WithValue(ctx, "host", host)
@@ -59,6 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("db-password", "", "password", "Password to connect DB")
 	rootCmd.PersistentFlags().StringP("db-host", "", "127.0.0.1", "Host to connect DB")
 	rootCmd.PersistentFlags().UintP("db-port", "", 3306, "Port to connect DB")
+	rootCmd.PersistentFlags().StringP("db-table-name", "", "sample", "DB table name")
 	rootCmd.PersistentFlags().StringP("github-user", "", "", "GitHub User")
 	rootCmd.PersistentFlags().StringP("github-token", "", "", "GitHub token")
 
@@ -69,6 +70,7 @@ func init() {
 	viper.BindPFlag("db-password", rootCmd.PersistentFlags().Lookup("db-password"))
 	viper.BindPFlag("db-host", rootCmd.PersistentFlags().Lookup("db-host"))
 	viper.BindPFlag("db-port", rootCmd.PersistentFlags().Lookup("db-port"))
+	viper.BindPFlag("db-table-name", rootCmd.PersistentFlags().Lookup("db-table-name"))
 	viper.BindPFlag("github-user", rootCmd.PersistentFlags().Lookup("github-user"))
 	viper.BindPFlag("github-token", rootCmd.PersistentFlags().Lookup("github-token"))
 

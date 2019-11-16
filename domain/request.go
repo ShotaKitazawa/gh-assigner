@@ -24,7 +24,7 @@ type GitHubUser struct {
 	SiteAdmin         bool   `json:"site_admin"`
 }
 
-// PullRequestEvent is GitHub Webhook during PullRequest operation
+// PullRequestEvent is GitHub Webhook Request during PullRequest operation
 type PullRequestEvent struct {
 	Action      string `json:"action"`
 	Number      int    `json:"number"`
@@ -339,10 +339,10 @@ type PullRequestEvent struct {
 	Sender GitHubUser `json:"sender"`
 }
 
-// PullRequestEventResponse is response to GitHub Webhook during PullRequest operation
+// PullRequestEventResponse GitHub Webhook Response during PullRequest operation
 type PullRequestEventResponse struct{}
 
-// IssueCommentEvent is GitHub Webhook during commented in Issue operation
+// IssueCommentEvent is GitHub Webhook Request during commented in Issue operation
 type IssueCommentEvent struct {
 	Action string `json:"action"`
 	Issue  struct {
@@ -484,5 +484,5 @@ type IssueCommentEvent struct {
 	Sender GitHubUser `json:"sender"`
 }
 
-// IssueCommentEventResponse is Response to GitHub Webhook during commented in Issue operation
+// IssueCommentEventResponse GitHub Webhook Response during commented in Issue operation
 type IssueCommentEventResponse struct{}
