@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gopkg.in/go-playground/assert.v1"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 )

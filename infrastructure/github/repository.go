@@ -44,8 +44,9 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 
 	// Check response
 	if resp.StatusCode != http.StatusCreated {
-		respBody, _ := ioutil.ReadAll(resp.Body)
-		r.Logger.Error(string(respBody))
+		if respBody, err := ioutil.ReadAll(resp.Body); err == nil && respBody != nil {
+			r.Logger.Error(respBody)
+		}
 		return fmt.Errorf("Response status is %d, expected %d", resp.StatusCode, http.StatusCreated)
 	}
 
@@ -81,8 +82,9 @@ func (r GitRepository) LabelToIssue(url, person, label string) error {
 
 	// Check response
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := ioutil.ReadAll(resp.Body)
-		r.Logger.Error(string(respBody))
+		if respBody, err := ioutil.ReadAll(resp.Body); err == nil && respBody != nil {
+			r.Logger.Error(string(respBody))
+		}
 		return fmt.Errorf("Response status is %d, expected %d", resp.StatusCode, http.StatusOK)
 	}
 

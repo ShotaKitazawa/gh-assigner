@@ -12,6 +12,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0
+	github.com/stretchr/testify v1.3.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
