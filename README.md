@@ -1,7 +1,10 @@
 # About
 
-![カイル君](https://www.kanatakita.com/images/kairu.png)
+<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/kairu.png" width="200px">
 
+# Architecture
+
+<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/architecture.png" width="400px">
 
 # Migrate DB
 
