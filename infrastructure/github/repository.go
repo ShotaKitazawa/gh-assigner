@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
@@ -14,6 +13,7 @@ import (
 
 // GitRepository is Repository
 type GitRepository struct {
+	Client *http.Client
 	User   string
 	Token  string
 	Logger interfaces.Logger
@@ -38,8 +38,7 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	// Request
-	client := &http.Client{Timeout: time.Duration(10) * time.Second}
-	resp, err := client.Do(req)
+	resp, err := r.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -76,8 +75,7 @@ func (r GitRepository) LabelToIssue(url, person, label string) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	// Request
-	client := &http.Client{Timeout: time.Duration(10) * time.Second}
-	resp, err := client.Do(req)
+	resp, err := r.Client.Do(req)
 	if err != nil {
 		return err
 	}

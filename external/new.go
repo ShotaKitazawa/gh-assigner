@@ -2,6 +2,8 @@ package external
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/ShotaKitazawa/gh-assigner/controller"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/github"
@@ -29,6 +31,7 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 	return &controller.GitHubWebhookController{
 		Interactor: &usecase.GitInteractor{
 			GitRepository: &github.GitRepository{
+				Client: &http.Client{Timeout: time.Duration(10) * time.Second},
 				User:   ghUser,
 				Token:  ghToken,
 				Logger: &Logger{},
