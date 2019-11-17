@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"fmt"
+
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 	"github.com/ShotaKitazawa/gh-assigner/usecase/interfaces"
 )
@@ -16,6 +18,16 @@ type GitInteractor struct {
 const (
 	requestLabel  = "review"
 	reviewedLabel = "wip"
+)
+
+var (
+	// const variable
+	pullRequestOpeningMessage = fmt.Sprintf(`
+以下のコマンドをコメントすることでプルリクエストのやり取りを行います。
+
+* %s/request%s : レビュイーがレビュアーにレビューをお願いするコマンド
+* %s/reviewed%s : レビュアーによるレビューにて修正点のある場合、レビュイーに返すコマンド
+`, "`", "`", "`", "`")
 )
 
 // OpenPullRequest is usecase
@@ -42,7 +54,7 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 	}
 
 	// Send message to PullRequest
-	err = i.GitInfrastructure.PostMessageToIssue(pullRequest.PullRequest.IssueURL, "これはtestです") // TODO
+	err = i.GitInfrastructure.PostMessageToIssue(pullRequest.PullRequest.IssueURL, pullRequestOpeningMessage)
 	if err != nil {
 		return
 	}
@@ -51,8 +63,6 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 
 // CommentRequest is usecase
 func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に review ラベルが付いてるならreturnする
-
 	// TODO: カレンダーから担当者を取ってくる
 	//person, err := i.CalendarInfrastructure.GetStaffThisWeek()
 	//err = i.GitInfrastructure.LabelToIssue(issueComment.PullRequest.IssueURL, person, "review")
@@ -71,12 +81,12 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 	}
 
 	// Create RequestAction record
+	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に review ラベルが付いてるならreturnする
+	// TODO: DB の pullrequests table の state カラムの update
 	err = i.DatabaseInfrastructure.CreateRequestAction(userID, repositoryID, uint(issueComment.Issue.Number))
 	if err != nil {
 		return
 	}
-
-	// TODO: DB の pullrequests table の state カラムの update
 
 	// Labeled "review" & assign user to PullRequest
 	err = i.GitInfrastructure.LabelToIssue(issueComment.Issue.URL, person, requestLabel)
@@ -88,8 +98,6 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 
 // CommentReviewed is usecase
 func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に wip ラベルが付いてるならreturnする
-
 	// User to open PullRequest
 	person := issueComment.Issue.User.Login
 
@@ -106,12 +114,12 @@ func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (r
 	}
 
 	// Create RequestAction record
+	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に wip ラベルが付いてるならreturnする
+	// TODO: DB の pullrequests table の state カラムの update
 	err = i.DatabaseInfrastructure.CreateReviewedAction(userID, repositoryID, uint(issueComment.Issue.Number))
 	if err != nil {
 		return
 	}
-
-	// TODO: DB の pullrequests table の state カラムの update
 
 	// Labeled "wip" & assign user to PullRequest
 	err = i.GitInfrastructure.LabelToIssue(issueComment.Issue.URL, person, reviewedLabel)
