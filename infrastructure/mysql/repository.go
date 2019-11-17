@@ -40,7 +40,11 @@ func (r DatabaseInfrastructure) CreateRequestAction(userID, repositoryID, issueI
 		tx.Rollback()
 		return
 	}
-	if len(pullrequests) > 1 {
+	if len(pullrequests) == 0 {
+		tx.Rollback()
+		err = fmt.Errorf("DB Data Mismatch: None of state OPEN PullRequest")
+		return
+	} else if len(pullrequests) > 1 {
 		tx.Rollback()
 		err = fmt.Errorf("DB Data Mismatch: Multiple state OPEN PullRequest")
 		return
@@ -89,7 +93,11 @@ func (r DatabaseInfrastructure) CreateReviewedAction(userID, repositoryID, issue
 		tx.Rollback()
 		return
 	}
-	if len(pullrequests) > 1 {
+	if len(pullrequests) == 0 {
+		tx.Rollback()
+		err = fmt.Errorf("DB Data Mismatch: None of state OPEN PullRequest")
+		return
+	} else if len(pullrequests) > 1 {
 		tx.Rollback()
 		err = fmt.Errorf("DB Data Mismatch: Multiple state OPEN PullRequest")
 		return
