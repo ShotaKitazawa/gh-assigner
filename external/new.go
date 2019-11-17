@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// NewGitHubWebhookController is initialize Controller, Interactor and Repositories.
+// NewGitHubWebhookController is initialize Controller, Interactor and Infrastructure.
 func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookController {
 	var err error
 
@@ -30,18 +30,18 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 
 	return &controller.GitHubWebhookController{
 		Interactor: &usecase.GitInteractor{
-			GitRepository: &github.GitRepository{
+			GitInfrastructure: &github.GitInfrastructure{
 				Client: &http.Client{Timeout: time.Duration(10) * time.Second},
 				User:   ghUser,
 				Token:  ghToken,
 				Logger: &Logger{},
 			},
-			DatabaseRepository: &mysql.DatabaseRepository{
+			DatabaseInfrastructure: &mysql.DatabaseInfrastructure{
 				DB:     db,
 				Logger: &Logger{},
 			},
 			/*
-				CalendarRepository: &googlecalendar.CalendarRepository{
+				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
 					Credential: TODO,
 				}
 			*/

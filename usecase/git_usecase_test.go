@@ -11,50 +11,50 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-type GitRepositoryMock struct{}
-type DatabaseRepositoryMock struct{}
-type CalendarRepositoryMock struct{}
+type GitInfrastructureMock struct{}
+type DatabaseInfrastructureMock struct{}
+type CalendarInfrastructureMock struct{}
 
 func newGitInteractor() *GitInteractor {
 	return &GitInteractor{
-		GitRepository:      &GitRepositoryMock{},
-		DatabaseRepository: &DatabaseRepositoryMock{},
-		CalendarRepository: &CalendarRepositoryMock{},
+		GitInfrastructure:      &GitInfrastructureMock{},
+		DatabaseInfrastructure: &DatabaseInfrastructureMock{},
+		CalendarInfrastructure: &CalendarInfrastructureMock{},
 	}
 }
-func (r GitRepositoryMock) PostMessageToIssue(url, message string) error {
+func (r GitInfrastructureMock) PostMessageToIssue(url, message string) error {
 	// TODO
 	return nil
 }
-func (r GitRepositoryMock) LabelToIssue(url, person, label string) error {
+func (r GitInfrastructureMock) LabelToIssue(url, person, label string) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreatePullRequest(userID, repositoryID, issueID uint, title string) error {
+func (r DatabaseInfrastructureMock) CreatePullRequest(userID, repositoryID, issueID uint, title string) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreateRequestAction(userID, repositoryID, issueID uint) error {
+func (r DatabaseInfrastructureMock) CreateRequestAction(userID, repositoryID, issueID uint) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreateReviewedAction(userID, repositoryID, issueID uint) error {
+func (r DatabaseInfrastructureMock) CreateReviewedAction(userID, repositoryID, issueID uint) error {
 	// TODO
 	return nil
 }
-func (r DatabaseRepositoryMock) CreateUserIfNotExists(username string) (uint, error) {
+func (r DatabaseInfrastructureMock) CreateUserIfNotExists(username string) (uint, error) {
 	// TODO
 	return 0, nil
 }
-func (r DatabaseRepositoryMock) CreateRepositoryIfNotExists(organication, repository string) (uint, error) {
+func (r DatabaseInfrastructureMock) CreateRepositoryIfNotExists(organication, repository string) (uint, error) {
 	// TODO
 	return 0, nil
 }
-func (r DatabaseRepositoryMock) GetPullRequestTTL(issueID uint) (time.Duration, error) {
+func (r DatabaseInfrastructureMock) GetPullRequestTTL(issueID uint) (time.Duration, error) {
 	// TODO
 	return 0, nil
 }
-func (r CalendarRepositoryMock) GetStaffThisWeek() (string, error) {
+func (r CalendarInfrastructureMock) GetStaffThisWeek() (string, error) {
 	// TODO
 	return "", nil
 }

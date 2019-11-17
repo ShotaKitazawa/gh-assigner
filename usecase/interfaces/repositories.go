@@ -4,12 +4,12 @@ import (
 	"time"
 )
 
-type GitRepository interface {
+type GitInfrastructure interface {
 	PostMessageToIssue(string, string) error
 	LabelToIssue(string, string, string) error
 }
 
-type DatabaseRepository interface {
+type DatabaseInfrastructure interface {
 	CreatePullRequest(uint, uint, uint, string) error
 	CreateRequestAction(uint, uint, uint) error
 	CreateReviewedAction(uint, uint, uint) error
@@ -18,6 +18,6 @@ type DatabaseRepository interface {
 	GetPullRequestTTL(uint) (time.Duration, error)
 }
 
-type CalendarRepository interface {
+type CalendarInfrastructure interface {
 	GetStaffThisWeek() (string, error)
 }

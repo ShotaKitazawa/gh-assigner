@@ -7,10 +7,10 @@ import (
 
 // GitInteractor is Interactor
 type GitInteractor struct {
-	GitRepository      interfaces.GitRepository
-	DatabaseRepository interfaces.DatabaseRepository
-	CalendarRepository interfaces.CalendarRepository
-	Logger             interfaces.Logger
+	GitInfrastructure      interfaces.GitInfrastructure
+	DatabaseInfrastructure interfaces.DatabaseInfrastructure
+	CalendarInfrastructure interfaces.CalendarInfrastructure
+	Logger                 interfaces.Logger
 }
 
 const (
@@ -24,25 +24,25 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 	person := pullRequest.Sender.Login
 
 	// Create User record if not exists
-	userID, err := i.DatabaseRepository.CreateUserIfNotExists(person)
+	userID, err := i.DatabaseInfrastructure.CreateUserIfNotExists(person)
 	if err != nil {
 		return
 	}
 
 	// Create Repository record if not exists
-	repositoryID, err := i.DatabaseRepository.CreateRepositoryIfNotExists(pullRequest.Repository.Owner.Login, pullRequest.Repository.Name)
+	repositoryID, err := i.DatabaseInfrastructure.CreateRepositoryIfNotExists(pullRequest.Repository.Owner.Login, pullRequest.Repository.Name)
 	if err != nil {
 		return
 	}
 
 	// Create PullRequest record
-	err = i.DatabaseRepository.CreatePullRequest(userID, repositoryID, uint(pullRequest.PullRequest.Number), pullRequest.PullRequest.Title)
+	err = i.DatabaseInfrastructure.CreatePullRequest(userID, repositoryID, uint(pullRequest.PullRequest.Number), pullRequest.PullRequest.Title)
 	if err != nil {
 		return
 	}
 
 	// Send message to PullRequest
-	err = i.GitRepository.PostMessageToIssue(pullRequest.PullRequest.IssueURL, "これはtestです") // TODO
+	err = i.GitInfrastructure.PostMessageToIssue(pullRequest.PullRequest.IssueURL, "これはtestです") // TODO
 	if err != nil {
 		return
 	}
@@ -54,24 +54,24 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に review ラベルが付いてるならreturnする
 
 	// TODO: カレンダーから担当者を取ってくる
-	//person, err := i.CalendarRepository.GetStaffThisWeek()
-	//err = i.GitRepository.LabelToIssue(issueComment.PullRequest.IssueURL, person, "review")
+	//person, err := i.CalendarInfrastructure.GetStaffThisWeek()
+	//err = i.GitInfrastructure.LabelToIssue(issueComment.PullRequest.IssueURL, person, "review")
 	person := "ShotaKitazawa"
 
 	// Create User record if not exists
-	userID, err := i.DatabaseRepository.CreateUserIfNotExists(person)
+	userID, err := i.DatabaseInfrastructure.CreateUserIfNotExists(person)
 	if err != nil {
 		return
 	}
 
 	// Create Repository record if not exists
-	repositoryID, err := i.DatabaseRepository.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
+	repositoryID, err := i.DatabaseInfrastructure.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
 	if err != nil {
 		return
 	}
 
 	// Create RequestAction record
-	err = i.DatabaseRepository.CreateRequestAction(userID, repositoryID, uint(issueComment.Issue.Number))
+	err = i.DatabaseInfrastructure.CreateRequestAction(userID, repositoryID, uint(issueComment.Issue.Number))
 	if err != nil {
 		return
 	}
@@ -79,7 +79,7 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 	// TODO: DB の pullrequests table の state カラムの update
 
 	// Labeled "review" & assign user to PullRequest
-	err = i.GitRepository.LabelToIssue(issueComment.Issue.URL, person, requestLabel)
+	err = i.GitInfrastructure.LabelToIssue(issueComment.Issue.URL, person, requestLabel)
 	if err != nil {
 		return
 	}
@@ -94,19 +94,19 @@ func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (r
 	person := issueComment.Issue.User.Login
 
 	// Create User record if not exists
-	userID, err := i.DatabaseRepository.CreateUserIfNotExists(person)
+	userID, err := i.DatabaseInfrastructure.CreateUserIfNotExists(person)
 	if err != nil {
 		return
 	}
 
 	// Create Repository record if not exists
-	repositoryID, err := i.DatabaseRepository.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
+	repositoryID, err := i.DatabaseInfrastructure.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
 	if err != nil {
 		return
 	}
 
 	// Create RequestAction record
-	err = i.DatabaseRepository.CreateReviewedAction(userID, repositoryID, uint(issueComment.Issue.Number))
+	err = i.DatabaseInfrastructure.CreateReviewedAction(userID, repositoryID, uint(issueComment.Issue.Number))
 	if err != nil {
 		return
 	}
@@ -114,7 +114,7 @@ func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (r
 	// TODO: DB の pullrequests table の state カラムの update
 
 	// Labeled "wip" & assign user to PullRequest
-	err = i.GitRepository.LabelToIssue(issueComment.Issue.URL, person, reviewedLabel)
+	err = i.GitInfrastructure.LabelToIssue(issueComment.Issue.URL, person, reviewedLabel)
 	if err != nil {
 		return
 	}

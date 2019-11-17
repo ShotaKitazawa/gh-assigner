@@ -10,16 +10,16 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
-// GitRepository is Repository
-type GitRepository struct {
+// GitInfrastructure is Infrastructure
+type GitInfrastructure struct {
 	Client *http.Client
 	User   string
 	Token  string
 	Logger interfaces.Logger
 }
 
-// PostMessageToIssue is Repository that post message to GitHub Issue/PullRequest.
-func (r GitRepository) PostMessageToIssue(url, message string) error {
+// PostMessageToIssue is Infrastructure that post message to GitHub Issue/PullRequest.
+func (r GitInfrastructure) PostMessageToIssue(url, message string) error {
 	// Create Body & Header
 	body, err := json.Marshal(PostMessageRequest{Body: message})
 	if err != nil {
@@ -53,8 +53,8 @@ func (r GitRepository) PostMessageToIssue(url, message string) error {
 	return nil
 }
 
-// LabelToIssue is Repository that label to GitHub Issue/PullRequest.
-func (r GitRepository) LabelToIssue(url, person, label string) error {
+// LabelToIssue is Infrastructure that label to GitHub Issue/PullRequest.
+func (r GitInfrastructure) LabelToIssue(url, person, label string) error {
 	// Create Body & Header
 	body, err := json.Marshal(EditLabelRequest{
 		Assignees: []string{person},

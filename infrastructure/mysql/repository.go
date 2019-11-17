@@ -10,19 +10,19 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
 
-// DatabaseRepository is Repository
-type DatabaseRepository struct {
+// DatabaseInfrastructure is Infrastructure
+type DatabaseInfrastructure struct {
 	DB     *sqlx.DB
 	Logger interfaces.Logger
 }
 
-func (r DatabaseRepository) CreatePullRequest(userID, repositoryID, issueID uint, title string) (err error) {
+func (r DatabaseInfrastructure) CreatePullRequest(userID, repositoryID, issueID uint, title string) (err error) {
 	query := `INSERT INTO pullrequests (user_id, repository_id, issue_id, title, state) VALUES (?,?,?,?,"open")`
 	_, err = r.DB.Exec(query, userID, repositoryID, issueID, title)
 	return
 }
 
-func (r DatabaseRepository) CreateRequestAction(userID, repositoryID, issueID uint) (err error) {
+func (r DatabaseInfrastructure) CreateRequestAction(userID, repositoryID, issueID uint) (err error) {
 	pullrequestID, err := r.GetPullRequestIDStateOpen(repositoryID, issueID)
 	if err != nil {
 		return
@@ -33,7 +33,7 @@ func (r DatabaseRepository) CreateRequestAction(userID, repositoryID, issueID ui
 	return err
 }
 
-func (r DatabaseRepository) CreateReviewedAction(userID, repositoryID, issueID uint) (err error) {
+func (r DatabaseInfrastructure) CreateReviewedAction(userID, repositoryID, issueID uint) (err error) {
 	pullrequestID, err := r.GetPullRequestIDStateOpen(repositoryID, issueID)
 	if err != nil {
 		return
@@ -44,7 +44,7 @@ func (r DatabaseRepository) CreateReviewedAction(userID, repositoryID, issueID u
 	return err
 }
 
-func (r DatabaseRepository) GetPullRequestIDStateOpen(repositoryID, issueID uint) (pullrequestID uint, err error) {
+func (r DatabaseInfrastructure) GetPullRequestIDStateOpen(repositoryID, issueID uint) (pullrequestID uint, err error) {
 	var pullrequestIDs []uint
 
 	query := `SELECT id FROM pullrequests WHERE repository_id = ? AND issue_id = ? AND state = "open"`
@@ -60,7 +60,7 @@ func (r DatabaseRepository) GetPullRequestIDStateOpen(repositoryID, issueID uint
 	return
 }
 
-func (r DatabaseRepository) CreateUserIfNotExists(username string) (userID uint, err error) {
+func (r DatabaseInfrastructure) CreateUserIfNotExists(username string) (userID uint, err error) {
 	query := `INSERT INTO users (name) VALUES (?)`
 	result, err := r.DB.Exec(query, username)
 	if err != nil {
@@ -78,7 +78,7 @@ func (r DatabaseRepository) CreateUserIfNotExists(username string) (userID uint,
 	return
 }
 
-func (r DatabaseRepository) CreateRepositoryIfNotExists(organization, repository string) (repositoryID uint, err error) {
+func (r DatabaseInfrastructure) CreateRepositoryIfNotExists(organization, repository string) (repositoryID uint, err error) {
 	query := `INSERT INTO repositories (organization, repository) VALUES (?,?)`
 	result, err := r.DB.Exec(query, organization, repository)
 	if err != nil {
@@ -96,7 +96,7 @@ func (r DatabaseRepository) CreateRepositoryIfNotExists(organization, repository
 	return
 }
 
-func (r DatabaseRepository) GetPullRequestTTL(issueID uint) (time.Duration, error) {
+func (r DatabaseInfrastructure) GetPullRequestTTL(issueID uint) (time.Duration, error) {
 	// TODO
 	return 0, nil
 }

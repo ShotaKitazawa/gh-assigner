@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGitHubRepository(t *testing.T) {
+func TestGitHubInfrastructure(t *testing.T) {
 	// Initialize
 	t.Parallel()
-	repo := &GitRepository{
+	infra := &GitInfrastructure{
 		User:   "test",
 		Token:  "test",
 		Logger: &Logger{},
@@ -51,10 +51,10 @@ func TestGitHubRepository(t *testing.T) {
 				},
 			))
 			defer ts.Close()
-			repo.Client = ts.Client()
+			infra.Client = ts.Client()
 
 			// Do
-			err := repo.PostMessageToIssue(ts.URL, msg)
+			err := infra.PostMessageToIssue(ts.URL, msg)
 
 			// Check
 			assert.Nil(t, err)
@@ -72,10 +72,10 @@ func TestGitHubRepository(t *testing.T) {
 				},
 			))
 			defer ts.Close()
-			repo.Client = ts.Client()
+			infra.Client = ts.Client()
 
 			// Do
-			err := repo.PostMessageToIssue(ts.URL, msg)
+			err := infra.PostMessageToIssue(ts.URL, msg)
 
 			// Check
 			assert.NotNil(t, err)
@@ -95,11 +95,11 @@ func TestGitHubRepository(t *testing.T) {
 				},
 			))
 			defer ts.Close()
-			repo.Client = ts.Client()
-			repo.Client.Timeout = time.Duration(10) * time.Second
+			infra.Client = ts.Client()
+			infra.Client.Timeout = time.Duration(10) * time.Second
 
 			// Do
-			err := repo.PostMessageToIssue(ts.URL, msg)
+			err := infra.PostMessageToIssue(ts.URL, msg)
 
 			// Check
 			assert.NotNil(t, err)
@@ -140,10 +140,10 @@ func TestGitHubRepository(t *testing.T) {
 				},
 			))
 			defer ts.Close()
-			repo.Client = ts.Client()
+			infra.Client = ts.Client()
 
 			// Do
-			err := repo.LabelToIssue(ts.URL, assignee, label)
+			err := infra.LabelToIssue(ts.URL, assignee, label)
 
 			// Check
 			assert.Nil(t, err)
@@ -160,10 +160,10 @@ func TestGitHubRepository(t *testing.T) {
 				},
 			))
 			defer ts.Close()
-			repo.Client = ts.Client()
+			infra.Client = ts.Client()
 
 			// Do
-			err := repo.LabelToIssue(ts.URL, assignee, label)
+			err := infra.LabelToIssue(ts.URL, assignee, label)
 
 			// Check
 			assert.NotNil(t, err)
@@ -182,11 +182,11 @@ func TestGitHubRepository(t *testing.T) {
 				},
 			))
 			defer ts.Close()
-			repo.Client = ts.Client()
-			repo.Client.Timeout = time.Duration(10) * time.Second
+			infra.Client = ts.Client()
+			infra.Client.Timeout = time.Duration(10) * time.Second
 
 			// Do
-			err := repo.LabelToIssue(ts.URL, assignee, label)
+			err := infra.LabelToIssue(ts.URL, assignee, label)
 
 			// Check
 			assert.NotNil(t, err)
