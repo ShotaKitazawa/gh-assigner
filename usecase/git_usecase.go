@@ -61,6 +61,16 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 	return domain.PullRequestEventResponse{}, nil
 }
 
+// MergePullRequest is usecase
+func (i GitInteractor) MergePullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
+	return domain.PullRequestEventResponse{}, nil
+}
+
+// ClosePullRequest is usecase
+func (i GitInteractor) ClosePullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
+	return domain.PullRequestEventResponse{}, nil
+}
+
 // CommentRequest is usecase
 func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
 	// TODO: カレンダーから担当者を取ってくる

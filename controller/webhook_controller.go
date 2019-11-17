@@ -42,8 +42,21 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 			ctx.JSON(http.StatusOK, res)
 		case "closed":
 			switch request.PullRequest.Merged {
-			case true: // TODO
-			case false: // TODO
+			case true:
+				res, err := c.Interactor.MergePullRequest(request)
+				if err != nil {
+					c.Logger.Error(err.Error())
+					ctx.JSON(http.StatusInternalServerError, err)
+					return err
+				}
+				ctx.JSON(http.StatusOK, res)
+			case false:
+				res, err := c.Interactor.ClosePullRequest(request)
+				if err != nil {
+					c.Logger.Error(err.Error())
+					ctx.JSON(http.StatusInternalServerError, err)
+					return err
+				}
 			}
 		}
 

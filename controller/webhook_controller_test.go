@@ -21,9 +21,11 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	flagOpenPullRequest = false
-	flagCommentRequest  = false
-	flagCommentReviewed = false
+	flagOpenPullRequest  = false
+	flagMergePullRequest = false
+	flagClosePullRequest = false
+	flagCommentRequest   = false
+	flagCommentReviewed  = false
 )
 
 type InteractorMock struct{}
@@ -37,6 +39,15 @@ func (i InteractorMock) OpenPullRequest(domain.PullRequestEvent) (domain.PullReq
 	flagOpenPullRequest = true
 	return domain.PullRequestEventResponse{}, nil
 }
+func (i InteractorMock) MergePullRequest(domain.PullRequestEvent) (domain.PullRequestEventResponse, error) {
+	flagMergePullRequest = true
+	return domain.PullRequestEventResponse{}, nil
+}
+func (i InteractorMock) ClosePullRequest(domain.PullRequestEvent) (domain.PullRequestEventResponse, error) {
+	flagClosePullRequest = true
+	return domain.PullRequestEventResponse{}, nil
+}
+
 func (i InteractorMock) CommentRequest(domain.IssueCommentEvent) (domain.PullRequestEventResponse, error) {
 	flagCommentRequest = true
 	return domain.PullRequestEventResponse{}, nil
@@ -84,6 +95,70 @@ func TestGitHubWebhookController(t *testing.T) {
 			assert.Equal(t, flagOpenPullRequest, true)
 			assert.Equal(t, responseWriter.Code, http.StatusOK)
 		})
+		/*
+			t.Run("PullRequestをMergeするとinteractor.MergePullRequest()が呼ばれることのテスト", func(t *testing.T) {
+				// Initialize
+				t.Parallel()
+				responseWriter := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(responseWriter)
+
+				// Create Body & Header
+				// TODO: marshal に interface を渡す
+				body, err := json.Marshal(domain.PullRequestEvent{
+					Action:      "closed",
+					PullRequest: GitHubPullRequest{Merged: true},
+				})
+				assert.Nil(t, err)
+				req, err := http.NewRequest(
+					"POST",
+					"http://localhost:8080/",
+					bytes.NewBuffer(body),
+				)
+				assert.Nil(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("X-GitHub-Event", "pull_request")
+				ctx.Request = req
+
+				// call
+				controller := newController()
+				controller.PostWebhook(ctx)
+
+				// assert
+				assert.Equal(t, flagMergePullRequest, true)
+				assert.Equal(t, responseWriter.Code, http.StatusOK)
+			})
+			t.Run("PullRequestをCloseするとinteractor.ClosePullRequest()が呼ばれることのテスト", func(t *testing.T) {
+				// Initialize
+				t.Parallel()
+				responseWriter := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(responseWriter)
+
+				// Create Body & Header
+				// TODO: marshal に interface を渡す
+				body, err := json.Marshal(domain.PullRequestEvent{
+					Action: "closed",
+					PullRequest: GitHubPullRequest{Merged: true},
+				})
+				assert.Nil(t, err)
+				req, err := http.NewRequest(
+					"POST",
+					"http://localhost:8080/",
+					bytes.NewBuffer(body),
+				)
+				assert.Nil(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("X-GitHub-Event", "pull_request")
+				ctx.Request = req
+
+				// call
+				controller := newController()
+				controller.PostWebhook(ctx)
+
+				// assert
+				assert.Equal(t, flagClosePullRequest, true)
+				assert.Equal(t, responseWriter.Code, http.StatusOK)
+			})
+		*/
 		t.Run("PullRequestに'/request'とCommentするとinteractor.CommentRequest()が呼ばれることのテスト", func(t *testing.T) {
 			// Initialize
 			t.Parallel()
