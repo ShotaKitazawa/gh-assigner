@@ -81,8 +81,6 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 	}
 
 	// Create RequestAction record
-	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に review ラベルが付いてるならreturnする
-	// TODO: DB の pullrequests table の state カラムの update
 	err = i.DatabaseInfrastructure.CreateRequestAction(userID, repositoryID, uint(issueComment.Issue.Number))
 	if err != nil {
 		return
@@ -114,8 +112,6 @@ func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (r
 	}
 
 	// Create RequestAction record
-	// TODO: DB の pullrequests table の state カラムよりプルリクエストの現在の状態を取得し、既に wip ラベルが付いてるならreturnする
-	// TODO: DB の pullrequests table の state カラムの update
 	err = i.DatabaseInfrastructure.CreateReviewedAction(userID, repositoryID, uint(issueComment.Issue.Number))
 	if err != nil {
 		return

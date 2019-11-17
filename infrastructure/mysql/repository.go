@@ -2,12 +2,18 @@ package mysql
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
+)
+
+const (
+	requestLabel  = "review"
+	reviewedLabel = "wip"
 )
 
 // DatabaseInfrastructure is Infrastructure
@@ -23,41 +29,101 @@ func (r DatabaseInfrastructure) CreatePullRequest(userID, repositoryID, issueID 
 }
 
 func (r DatabaseInfrastructure) CreateRequestAction(userID, repositoryID, issueID uint) (err error) {
-	pullrequestID, err := r.GetPullRequestIDStateOpen(repositoryID, issueID)
+	// Start transaction
+	tx := r.DB.MustBegin()
+
+	// Get PullRequest state is not CLOSE/MERGE
+	var pullrequests []PullRequest
+	query := `SELECT id, state FROM pullrequests WHERE repository_id = ? AND issue_id = ? AND NOT (state = "close" OR state = "merge") FOR UPDATE`
+	err = r.DB.Select(&pullrequests, query, repositoryID, issueID)
 	if err != nil {
+		tx.Rollback()
+		return
+	}
+	if len(pullrequests) > 1 {
+		tx.Rollback()
+		err = fmt.Errorf("DB Data Mismatch: Multiple state OPEN PullRequest")
 		return
 	}
 
-	query := `INSERT INTO request_actions (pullreq_id, user_id) VALUES (?,?)`
-	_, err = r.DB.Exec(query, pullrequestID, userID)
+	// Return when PullRequest state has already been `requestLabel`
+	if pullrequests[0].State == requestLabel {
+		tx.Rollback()
+		r.Logger.Debug(fmt.Sprintf("PullRequest state has already been %s", strings.ToUpper(requestLabel)))
+		return
+	}
+
+	pullrequestID := pullrequests[0].ID
+
+	// Create RequestAction record
+	query = `INSERT INTO request_actions (pullreq_id, user_id) VALUES (?,?)`
+	_, err = tx.Exec(query, pullrequestID, userID)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	// Update state Calumn in pullrequests Table
+	query = `UPDATE pullrequests SET state = ? WHERE id = ?`
+	_, err = tx.Exec(query, requestLabel, pullrequestID)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	// Commit transaction
+	tx.Commit()
+
 	return err
 }
 
 func (r DatabaseInfrastructure) CreateReviewedAction(userID, repositoryID, issueID uint) (err error) {
-	pullrequestID, err := r.GetPullRequestIDStateOpen(repositoryID, issueID)
+	// Start transaction
+	tx := r.DB.MustBegin()
+
+	// Get PullRequest state is not CLOSE/MERGE
+	var pullrequests []PullRequest
+	query := `SELECT id, state FROM pullrequests WHERE repository_id = ? AND issue_id = ? AND NOT (state = "close" OR state = "merge") FOR UPDATE`
+	err = r.DB.Select(&pullrequests, query, repositoryID, issueID)
 	if err != nil {
+		tx.Rollback()
 		return
 	}
-
-	query := `INSERT INTO reviewed_actions (pullreq_id, user_id) VALUES (?,?)`
-	_, err = r.DB.Exec(query, pullrequestID, userID)
-	return err
-}
-
-func (r DatabaseInfrastructure) GetPullRequestIDStateOpen(repositoryID, issueID uint) (pullrequestID uint, err error) {
-	var pullrequestIDs []uint
-
-	query := `SELECT id FROM pullrequests WHERE repository_id = ? AND issue_id = ? AND state = "open"`
-	err = r.DB.Select(&pullrequestIDs, query, repositoryID, issueID)
-	if err != nil {
-		return
-	}
-	if len(pullrequestIDs) > 1 {
+	if len(pullrequests) > 1 {
+		tx.Rollback()
 		err = fmt.Errorf("DB Data Mismatch: Multiple state OPEN PullRequest")
 		return
 	}
-	pullrequestID = pullrequestIDs[0]
-	return
+
+	// Return when PullRequest state has already been `reviewedLabel`
+	if pullrequests[0].State == reviewedLabel {
+		tx.Rollback()
+		r.Logger.Debug(fmt.Sprintf("PullRequest state has already been %s", strings.ToUpper(reviewedLabel)))
+		return
+	}
+
+	pullrequestID := pullrequests[0].ID
+
+	// Create RequestAction record
+	query = `INSERT INTO reviewed_actions (pullreq_id, user_id) VALUES (?,?)`
+	_, err = tx.Exec(query, pullrequestID, userID)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	// Update state Calumn in pullrequests Table
+	query = `UPDATE pullrequests SET state = ? WHERE id = ?`
+	_, err = tx.Exec(query, reviewedLabel, pullrequestID)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	// Commit transaction
+	tx.Commit()
+
+	return err
 }
 
 func (r DatabaseInfrastructure) CreateUserIfNotExists(username string) (userID uint, err error) {
