@@ -57,6 +57,7 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 					ctx.JSON(http.StatusInternalServerError, err)
 					return err
 				}
+				ctx.JSON(http.StatusOK, res)
 			}
 		}
 

@@ -13,20 +13,40 @@ import (
 	"github.com/pkg/errors"
 )
 
-// NewGitHubWebhookController is initialize Controller, Interactor and Infrastructure.
-func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookController {
-	var err error
+var (
+	db *sqlx.DB
+)
 
+// Initialize is initialize shared setting with all Controller
+func Initialize(ctx context.Context) func() {
 	// Get DB connection
-	dsn := getContext(ctx, "dsn").(string)
+	dsn, err := getContextString(ctx, dsnContextKey)
+	if err != nil {
+		panic(err)
+	}
 	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
 		panic(errors.Wrap(err, "failed to connect to DB"))
 	}
 
+	return func() {
+		db.Close()
+	}
+}
+
+// NewGitHubWebhookController is initialize Controller, Interactor and Infrastructure.
+func NewGitHubWebhookController(ctx context.Context) (*controller.GitHubWebhookController, func()) {
+	var err error
+
 	// Get Github User & Token
-	ghUser := getContext(ctx, "gh_user").(string)
-	ghToken := getContext(ctx, "gh_token").(string)
+	ghUser, err := getContextString(ctx, ghUserContextKey)
+	if err != nil {
+		panic(err)
+	}
+	ghToken, err := getContextString(ctx, ghTokenContextKey)
+	if err != nil {
+		panic(err)
+	}
 
 	return &controller.GitHubWebhookController{
 		Interactor: &usecase.GitInteractor{
@@ -48,5 +68,5 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 			Logger: &Logger{},
 		},
 		Logger: &Logger{},
-	}
+	}, func() {}
 }
