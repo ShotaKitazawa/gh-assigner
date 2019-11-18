@@ -6,16 +6,19 @@ import (
 
 type GitInfrastructure interface {
 	PostMessageToIssue(string, string) error
-	LabelToIssue(string, string, string) error
+	LabelAndAssignIssue(string, string, string) error
+	UnlabelIssue(string) error
 }
 
 type DatabaseInfrastructure interface {
-	CreatePullRequest(uint, uint, uint, string) error
-	CreateRequestAction(uint, uint, uint) error
-	CreateReviewedAction(uint, uint, uint) error
-	CreateUserIfNotExists(string) (uint, error)
-	CreateRepositoryIfNotExists(string, string) (uint, error)
-	GetPullRequestTTL(uint) (time.Duration, error)
+	CreatePullRequest(string, string, string, uint, string) error
+	MergePullRequest(string, string, string, uint, string) error
+	ClosePullRequest(string, string, string, uint, string) error
+	CreateRequestAction(string, string, string, uint) error
+	CreateReviewedAction(string, string, string, uint) error
+	GetPullRequestTTL(string, string, uint) (time.Duration, error)
+	//CreateUserIfNotExists(string) (uint, error)
+	//CreateRepositoryIfNotExists(string, string) (uint, error)
 }
 
 type CalendarInfrastructure interface {

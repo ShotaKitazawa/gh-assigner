@@ -26,29 +26,21 @@ func (r GitInfrastructureMock) PostMessageToIssue(url, message string) error {
 	// TODO
 	return nil
 }
-func (r GitInfrastructureMock) LabelToIssue(url, person, label string) error {
+func (r GitInfrastructureMock) LabelAndAssignIssue(url, person, label string) error {
 	// TODO
 	return nil
 }
-func (r DatabaseInfrastructureMock) CreatePullRequest(userID, repositoryID, issueID uint, title string) error {
+func (r DatabaseInfrastructureMock) CreatePullRequest(username, organizationName, repositoryName string, issueID uint, title string) error {
 	// TODO
 	return nil
 }
-func (r DatabaseInfrastructureMock) CreateRequestAction(userID, repositoryID, issueID uint) error {
+func (r DatabaseInfrastructureMock) CreateRequestAction(username, organizationName, repositoryName string, issueID uint) error {
 	// TODO
 	return nil
 }
-func (r DatabaseInfrastructureMock) CreateReviewedAction(userID, repositoryID, issueID uint) error {
+func (r DatabaseInfrastructureMock) CreateReviewedAction(username, organizationName, repositoryName string, issueID uint) error {
 	// TODO
 	return nil
-}
-func (r DatabaseInfrastructureMock) CreateUserIfNotExists(username string) (uint, error) {
-	// TODO
-	return 0, nil
-}
-func (r DatabaseInfrastructureMock) CreateRepositoryIfNotExists(organication, repository string) (uint, error) {
-	// TODO
-	return 0, nil
 }
 func (r DatabaseInfrastructureMock) GetPullRequestTTL(issueID uint) (time.Duration, error) {
 	// TODO

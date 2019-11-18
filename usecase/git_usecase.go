@@ -22,7 +22,7 @@ const (
 
 var (
 	// const variable
-	pullRequestOpeningMessage = fmt.Sprintf(`
+	pullRequestOpenedMessage = fmt.Sprintf(`
 以下のコマンドをコメントすることでプルリクエストのやり取りを行います。
 
 * %s/request%s : レビュイーがレビュアーにレビューをお願いするコマンド
@@ -32,29 +32,22 @@ var (
 
 // OpenPullRequest is usecase
 func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
-	// User to open PullRequest
-	person := pullRequest.Sender.Login
-
-	// Create User record if not exists
-	userID, err := i.DatabaseInfrastructure.CreateUserIfNotExists(person)
-	if err != nil {
-		return
-	}
-
-	// Create Repository record if not exists
-	repositoryID, err := i.DatabaseInfrastructure.CreateRepositoryIfNotExists(pullRequest.Repository.Owner.Login, pullRequest.Repository.Name)
-	if err != nil {
-		return
-	}
+	// Webhook request variable
+	senderUserName := pullRequest.Sender.Login
+	organizationName := pullRequest.Repository.Owner.Login
+	repositoryName := pullRequest.Repository.Name
+	pullRequestID := uint(pullRequest.PullRequest.Number)
+	pullRequestTitle := pullRequest.PullRequest.Title
+	pullRequestURL := pullRequest.PullRequest.IssueURL
 
 	// Create PullRequest record
-	err = i.DatabaseInfrastructure.CreatePullRequest(userID, repositoryID, uint(pullRequest.PullRequest.Number), pullRequest.PullRequest.Title)
+	err = i.DatabaseInfrastructure.CreatePullRequest(senderUserName, organizationName, repositoryName, pullRequestID, pullRequestTitle)
 	if err != nil {
 		return
 	}
 
 	// Send message to PullRequest
-	err = i.GitInfrastructure.PostMessageToIssue(pullRequest.PullRequest.IssueURL, pullRequestOpeningMessage)
+	err = i.GitInfrastructure.PostMessageToIssue(pullRequestURL, pullRequestOpenedMessage)
 	if err != nil {
 		return
 	}
@@ -63,41 +56,86 @@ func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res
 
 // MergePullRequest is usecase
 func (i GitInteractor) MergePullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
+	// Webhook request variable
+	senderUserName := pullRequest.Sender.Login
+	organizationName := pullRequest.Repository.Owner.Login
+	repositoryName := pullRequest.Repository.Name
+	pullRequestID := uint(pullRequest.PullRequest.Number)
+	pullRequestTitle := pullRequest.PullRequest.Title
+	pullRequestURL := pullRequest.PullRequest.IssueURL
+
+	// update PullRequst record
+	err = i.DatabaseInfrastructure.MergePullRequest(senderUserName, organizationName, repositoryName, pullRequestID, pullRequestTitle)
+	if err != nil {
+		return
+	}
+
+	// get PullRequest TTL
+	pullRequestTTL, err := i.DatabaseInfrastructure.GetPullRequestTTL(organizationName, repositoryName, pullRequestID)
+	pullRequestMergedMessage := fmt.Sprintf("レビュー待ち時間総計: %v", pullRequestTTL)
+
+	// Send message to PullRequest
+	err = i.GitInfrastructure.PostMessageToIssue(pullRequestURL, pullRequestMergedMessage)
+	if err != nil {
+		return
+	}
+
+	// Unlabeled
+	err = i.GitInfrastructure.UnlabelIssue(pullRequestURL)
+	if err != nil {
+		return
+	}
+
 	return domain.PullRequestEventResponse{}, nil
 }
 
 // ClosePullRequest is usecase
 func (i GitInteractor) ClosePullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
+	// Webhook request variable
+	senderUserName := pullRequest.Sender.Login
+	organizationName := pullRequest.Repository.Owner.Login
+	repositoryName := pullRequest.Repository.Name
+	pullRequestID := uint(pullRequest.PullRequest.Number)
+	pullRequestTitle := pullRequest.PullRequest.Title
+	pullRequestURL := pullRequest.PullRequest.IssueURL
+
+	// update PullRequst record
+	err = i.DatabaseInfrastructure.ClosePullRequest(senderUserName, organizationName, repositoryName, pullRequestID, pullRequestTitle)
+	if err != nil {
+		return
+	}
+
+	// Unlabeled
+	err = i.GitInfrastructure.UnlabelIssue(pullRequestURL)
+	if err != nil {
+		return
+	}
+
 	return domain.PullRequestEventResponse{}, nil
 }
 
 // CommentRequest is usecase
 func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// TODO: カレンダーから担当者を取ってくる
-	//person, err := i.CalendarInfrastructure.GetStaffThisWeek()
-	//err = i.GitInfrastructure.LabelToIssue(issueComment.PullRequest.IssueURL, person, "review")
-	person := "ShotaKitazawa"
-
-	// Create User record if not exists
-	userID, err := i.DatabaseInfrastructure.CreateUserIfNotExists(person)
-	if err != nil {
-		return
-	}
-
-	// Create Repository record if not exists
-	repositoryID, err := i.DatabaseInfrastructure.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
-	if err != nil {
-		return
-	}
+	// Webhook request variable
+	senderUserName := issueComment.Sender.Login
+	organizationName := issueComment.Repository.Owner.Login
+	repositoryName := issueComment.Repository.Name
+	pullRequestID := uint(issueComment.Issue.Number)
+	pullRequestURL := issueComment.Issue.URL
 
 	// Create RequestAction record
-	err = i.DatabaseInfrastructure.CreateRequestAction(userID, repositoryID, uint(issueComment.Issue.Number))
+	err = i.DatabaseInfrastructure.CreateRequestAction(senderUserName, organizationName, repositoryName, pullRequestID)
 	if err != nil {
 		return
 	}
 
+	// TODO: カレンダーから担当者を取ってくる
+	//assigneeUserName, err := i.CalendarInfrastructure.GetStaffThisWeek()
+	//err = i.GitInfrastructure.LabelAndAssignIssue(issueComment.PullRequest.IssueURL, person, "review")
+	assigneeUserName := "ShotaKitazawa"
+
 	// Labeled "review" & assign user to PullRequest
-	err = i.GitInfrastructure.LabelToIssue(issueComment.Issue.URL, person, requestLabel)
+	err = i.GitInfrastructure.LabelAndAssignIssue(pullRequestURL, assigneeUserName, requestLabel)
 	if err != nil {
 		return
 	}
@@ -106,29 +144,22 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 
 // CommentReviewed is usecase
 func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// User to open PullRequest
-	person := issueComment.Issue.User.Login
-
-	// Create User record if not exists
-	userID, err := i.DatabaseInfrastructure.CreateUserIfNotExists(person)
-	if err != nil {
-		return
-	}
-
-	// Create Repository record if not exists
-	repositoryID, err := i.DatabaseInfrastructure.CreateRepositoryIfNotExists(issueComment.Repository.Owner.Login, issueComment.Repository.Name)
-	if err != nil {
-		return
-	}
+	// Webhook request variable
+	senderUserName := issueComment.Sender.Login
+	organizationName := issueComment.Repository.Owner.Login
+	repositoryName := issueComment.Repository.Name
+	pullRequestID := uint(issueComment.Issue.Number)
+	pullRequestURL := issueComment.Issue.URL
+	openedPullRequestUserName := issueComment.Issue.User.Login
 
 	// Create RequestAction record
-	err = i.DatabaseInfrastructure.CreateReviewedAction(userID, repositoryID, uint(issueComment.Issue.Number))
+	err = i.DatabaseInfrastructure.CreateReviewedAction(senderUserName, organizationName, repositoryName, pullRequestID)
 	if err != nil {
 		return
 	}
 
 	// Labeled "wip" & assign user to PullRequest
-	err = i.GitInfrastructure.LabelToIssue(issueComment.Issue.URL, person, reviewedLabel)
+	err = i.GitInfrastructure.LabelAndAssignIssue(pullRequestURL, openedPullRequestUserName, reviewedLabel)
 	if err != nil {
 		return
 	}

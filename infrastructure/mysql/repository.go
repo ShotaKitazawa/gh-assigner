@@ -22,20 +22,68 @@ type DatabaseInfrastructure struct {
 	Logger interfaces.Logger
 }
 
-func (r DatabaseInfrastructure) CreatePullRequest(userID, repositoryID, issueID uint, title string) (err error) {
+func (r DatabaseInfrastructure) CreatePullRequest(userName, organizationName, repositoryName string, issueID uint, title string) (err error) {
+	userID, err := r.CreateUserIfNotExists(userName)
+	if err != nil {
+		return
+	}
+	repositoryID, err := r.CreateRepositoryIfNotExists(organizationName, repositoryName)
+	if err != nil {
+		return
+	}
+
 	query := `INSERT INTO pullrequests (user_id, repository_id, issue_id, title, state) VALUES (?,?,?,?,"open")`
 	_, err = r.DB.Exec(query, userID, repositoryID, issueID, title)
 	return
 }
 
-func (r DatabaseInfrastructure) CreateRequestAction(userID, repositoryID, issueID uint) (err error) {
+func (r DatabaseInfrastructure) ClosePullRequest(userName, organizationName, repositoryName string, issueID uint, title string) (err error) {
+	_, err = r.CreateUserIfNotExists(userName)
+	if err != nil {
+		return
+	}
+	repositoryID, err := r.CreateRepositoryIfNotExists(organizationName, repositoryName)
+	if err != nil {
+		return
+	}
+
+	query := `UPDATE pullrequests SET state = "close" WHERE repository_id = ? AND issue_id = ?`
+	_, err = r.DB.Exec(query, repositoryID, issueID)
+	return
+}
+
+func (r DatabaseInfrastructure) MergePullRequest(userName, organizationName, repositoryName string, issueID uint, title string) (err error) {
+	_, err = r.CreateUserIfNotExists(userName)
+	if err != nil {
+		return
+	}
+	repositoryID, err := r.CreateRepositoryIfNotExists(organizationName, repositoryName)
+	if err != nil {
+		return
+	}
+
+	query := `UPDATE pullrequests SET state = "merge" WHERE repository_id = ? AND issue_id = ?`
+	_, err = r.DB.Exec(query, repositoryID, issueID)
+	return
+}
+
+func (r DatabaseInfrastructure) CreateRequestAction(userName, organizationName, repositoryName string, issueID uint) (err error) {
+	userID, err := r.CreateUserIfNotExists(userName)
+	if err != nil {
+		return
+	}
+	repositoryID, err := r.CreateRepositoryIfNotExists(organizationName, repositoryName)
+	if err != nil {
+		return
+	}
+
 	// Start transaction
 	tx := r.DB.MustBegin()
 
 	// Get PullRequest state is not CLOSE/MERGE
 	var pullrequests []PullRequest
 	query := `SELECT id, state FROM pullrequests WHERE repository_id = ? AND issue_id = ? AND NOT (state = "close" OR state = "merge") FOR UPDATE`
-	err = r.DB.Select(&pullrequests, query, repositoryID, issueID)
+	err = tx.Select(&pullrequests, query, repositoryID, issueID)
 	if err != nil {
 		tx.Rollback()
 		return
@@ -59,8 +107,8 @@ func (r DatabaseInfrastructure) CreateRequestAction(userID, repositoryID, issueI
 
 	pullrequestID := pullrequests[0].ID
 
-	// Create RequestAction record
-	query = `INSERT INTO request_actions (pullreq_id, user_id) VALUES (?,?)`
+	// Create Action record
+	query = `INSERT INTO actions (pullreq_id, request_user_id) VALUES (?,?)`
 	_, err = tx.Exec(query, pullrequestID, userID)
 	if err != nil {
 		tx.Rollback()
@@ -81,14 +129,23 @@ func (r DatabaseInfrastructure) CreateRequestAction(userID, repositoryID, issueI
 	return err
 }
 
-func (r DatabaseInfrastructure) CreateReviewedAction(userID, repositoryID, issueID uint) (err error) {
+func (r DatabaseInfrastructure) CreateReviewedAction(userName, organizationName, repositoryName string, issueID uint) (err error) {
+	userID, err := r.CreateUserIfNotExists(userName)
+	if err != nil {
+		return
+	}
+	repositoryID, err := r.CreateRepositoryIfNotExists(organizationName, repositoryName)
+	if err != nil {
+		return
+	}
+
 	// Start transaction
 	tx := r.DB.MustBegin()
 
 	// Get PullRequest state is not CLOSE/MERGE
 	var pullrequests []PullRequest
 	query := `SELECT id, state FROM pullrequests WHERE repository_id = ? AND issue_id = ? AND NOT (state = "close" OR state = "merge") FOR UPDATE`
-	err = r.DB.Select(&pullrequests, query, repositoryID, issueID)
+	err = tx.Select(&pullrequests, query, repositoryID, issueID)
 	if err != nil {
 		tx.Rollback()
 		return
@@ -112,9 +169,9 @@ func (r DatabaseInfrastructure) CreateReviewedAction(userID, repositoryID, issue
 
 	pullrequestID := pullrequests[0].ID
 
-	// Create RequestAction record
-	query = `INSERT INTO reviewed_actions (pullreq_id, user_id) VALUES (?,?)`
-	_, err = tx.Exec(query, pullrequestID, userID)
+	// Update Action record
+	query = `UPDATE actions SET review_user_id = ?, reviewed_at = NOW() WHERE pullreq_id = ? AND (review_user_id IS NULL AND reviewed_at IS NULL)`
+	_, err = tx.Exec(query, userID, pullrequestID)
 	if err != nil {
 		tx.Rollback()
 		return
@@ -152,15 +209,15 @@ func (r DatabaseInfrastructure) CreateUserIfNotExists(username string) (userID u
 	return
 }
 
-func (r DatabaseInfrastructure) CreateRepositoryIfNotExists(organization, repository string) (repositoryID uint, err error) {
+func (r DatabaseInfrastructure) CreateRepositoryIfNotExists(organizationName, repositoryName string) (repositoryID uint, err error) {
 	query := `INSERT INTO repositories (organization, repository) VALUES (?,?)`
-	result, err := r.DB.Exec(query, organization, repository)
+	result, err := r.DB.Exec(query, organizationName, repositoryName)
 	if err != nil {
 		// Ignore error 1062: Duplicate entry
 		if mysqlError, ok := err.(*mysql.MySQLError); ok {
 			if mysqlError.Number == 1062 {
 				query := `SELECT id FROM repositories WHERE organization = ? AND repository = ?`
-				err = r.DB.Get(&repositoryID, query, organization, repository)
+				err = r.DB.Get(&repositoryID, query, organizationName, repositoryName)
 			}
 		}
 		return
@@ -170,7 +227,28 @@ func (r DatabaseInfrastructure) CreateRepositoryIfNotExists(organization, reposi
 	return
 }
 
-func (r DatabaseInfrastructure) GetPullRequestTTL(issueID uint) (time.Duration, error) {
-	// TODO
-	return 0, nil
+func (r DatabaseInfrastructure) GetPullRequestTTL(organizationName, repositoryName string, issueID uint) (duration time.Duration, err error) {
+	query := `
+SELECT a.requested_at, a.reviewed_at
+FROM repositories AS r
+JOIN pullrequests AS p ON r.id = p.repository_id
+JOIN actions AS a ON p.id = a.pullreq_id
+WHERE r.organization = ? AND r.repository = ? AND p.issue_id = ? `
+
+	timestamps := []struct {
+		RequestedAt *time.Time `db:"requested_at"`
+		ReviewedAt  *time.Time `db:"reviewed_at"`
+	}{}
+	err = r.DB.Select(&timestamps, query, organizationName, repositoryName, issueID)
+	if err != nil {
+		return
+	}
+	for _, timestamp := range timestamps {
+		if timestamp.RequestedAt == nil || timestamp.ReviewedAt == nil {
+			continue
+		}
+		duration += timestamp.ReviewedAt.Sub(*timestamp.RequestedAt)
+	}
+
+	return
 }

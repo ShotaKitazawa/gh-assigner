@@ -105,7 +105,7 @@ func TestGitHubInfrastructure(t *testing.T) {
 			assert.NotNil(t, err)
 		})
 	})
-	t.Run("LabelToIssue()", func(t *testing.T) {
+	t.Run("LabelAndAssignIssue()", func(t *testing.T) {
 		// Initialize
 		t.Parallel()
 		label := "test"
@@ -143,7 +143,7 @@ func TestGitHubInfrastructure(t *testing.T) {
 			infra.Client = ts.Client()
 
 			// Do
-			err := infra.LabelToIssue(ts.URL, assignee, label)
+			err := infra.LabelAndAssignIssue(ts.URL, assignee, label)
 
 			// Check
 			assert.Nil(t, err)
@@ -163,7 +163,7 @@ func TestGitHubInfrastructure(t *testing.T) {
 			infra.Client = ts.Client()
 
 			// Do
-			err := infra.LabelToIssue(ts.URL, assignee, label)
+			err := infra.LabelAndAssignIssue(ts.URL, assignee, label)
 
 			// Check
 			assert.NotNil(t, err)
@@ -186,7 +186,7 @@ func TestGitHubInfrastructure(t *testing.T) {
 			infra.Client.Timeout = time.Duration(10) * time.Second
 
 			// Do
-			err := infra.LabelToIssue(ts.URL, assignee, label)
+			err := infra.LabelAndAssignIssue(ts.URL, assignee, label)
 
 			// Check
 			assert.NotNil(t, err)
