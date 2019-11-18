@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/ShotaKitazawa/gh-assigner/domain"
+	"github.com/nlopes/slack"
 )
 
 type GitInteractor interface {
@@ -10,4 +11,8 @@ type GitInteractor interface {
 	ClosePullRequest(domain.PullRequestEvent) (domain.PullRequestEventResponse, error)
 	CommentRequest(domain.IssueCommentEvent) (domain.PullRequestEventResponse, error)
 	CommentReviewed(domain.IssueCommentEvent) (domain.PullRequestEventResponse, error)
+}
+
+type SlackInteractor interface {
+	Hello(*slack.MessageEvent) (err error)
 }

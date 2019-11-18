@@ -10,10 +10,13 @@ import (
 type contextKey string
 
 const (
-	hostContextKey    contextKey = "host"
-	dsnContextKey     contextKey = "dsn"
-	ghUserContextKey  contextKey = "gh_user"
-	ghTokenContextKey contextKey = "gh_token"
+	hostContextKey          contextKey = "host"
+	dsnContextKey           contextKey = "dsn"
+	ghUserContextKey        contextKey = "gh_user"
+	ghTokenContextKey       contextKey = "gh_token"
+	slackChannelsContextKey contextKey = "slack_channels"
+	slackBotUserContextKey  contextKey = "slack_botuser"
+	slackTokenContextKey    contextKey = "slack_token"
 )
 
 func getContextString(ctx context.Context, key contextKey) (result string, err error) {

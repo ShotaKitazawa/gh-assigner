@@ -24,3 +24,7 @@ type DatabaseInfrastructure interface {
 type CalendarInfrastructure interface {
 	GetStaffThisWeek() (string, error)
 }
+
+type SlackInfrastructure interface {
+	HelloMessage(string, string) error
+}
