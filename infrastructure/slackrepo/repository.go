@@ -1,8 +1,6 @@
 package slackrepo
 
 import (
-	"fmt"
-
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 	"github.com/nlopes/slack"
 )

@@ -4,6 +4,7 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 )
 
+// GitInteractor is interface of Interactor
 type GitInteractor interface {
 	OpenPullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error)
 	MergePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error)
@@ -12,6 +13,9 @@ type GitInteractor interface {
 	CommentReviewed(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error)
 }
 
+// ChatInteractor is interface of Interactor
 type ChatInteractor interface {
-	Hello(domain.SlackMessage) (err error)
+	Pong(domain.SlackMessage) error
+	ShowDefault(domain.SlackMessage) error
+	ShowHelp(domain.SlackMessage) error
 }

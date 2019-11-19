@@ -16,10 +16,37 @@ type SlackRTMController struct {
 
 func (c SlackRTMController) MessageEvent(ev *slack.MessageEvent) (err error) {
 	commands := strings.Split(trimNewlineChar(ev.Msg.Text), " ")
-	err = c.Interactor.Hello(domain.SlackMessage{
-		ChannelID:  ev.Channel,
-		SenderName: ev.User,
-		Commands:   commands,
-	})
-	return err
+	switch commands[1] {
+	case "ping":
+		err = c.Interactor.Pong(domain.SlackMessage{
+			ChannelID:  ev.Channel,
+			SenderName: ev.User,
+			Commands:   commands,
+		})
+		if err != nil {
+			c.Logger.Error(err.Error())
+			return
+		}
+	case "help":
+		err = c.Interactor.ShowHelp(domain.SlackMessage{
+			ChannelID:  ev.Channel,
+			SenderName: ev.User,
+			Commands:   commands,
+		})
+		if err != nil {
+			c.Logger.Error(err.Error())
+			return
+		}
+	default:
+		err = c.Interactor.ShowDefault(domain.SlackMessage{
+			ChannelID:  ev.Channel,
+			SenderName: ev.User,
+			Commands:   commands,
+		})
+		if err != nil {
+			c.Logger.Error(err.Error())
+			return
+		}
+	}
+	return
 }
