@@ -35,26 +35,26 @@ func newController() *GitHubWebhookController {
 		Interactor: &InteractorMock{},
 	}
 }
-func (i InteractorMock) OpenPullRequest(domain.PullRequestEvent) (domain.PullRequestEventResponse, error) {
+func (i InteractorMock) OpenPullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagOpenPullRequest = true
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
-func (i InteractorMock) MergePullRequest(domain.PullRequestEvent) (domain.PullRequestEventResponse, error) {
+func (i InteractorMock) MergePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagMergePullRequest = true
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
-func (i InteractorMock) ClosePullRequest(domain.PullRequestEvent) (domain.PullRequestEventResponse, error) {
+func (i InteractorMock) ClosePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagClosePullRequest = true
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
 
-func (i InteractorMock) CommentRequest(domain.IssueCommentEvent) (domain.PullRequestEventResponse, error) {
+func (i InteractorMock) CommentRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagCommentRequest = true
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
-func (i InteractorMock) CommentReviewed(domain.IssueCommentEvent) (domain.PullRequestEventResponse, error) {
+func (i InteractorMock) CommentReviewed(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagCommentReviewed = true
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
 
 func TestGitHubWebhookController(t *testing.T) {
@@ -73,7 +73,7 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
 			// Create Body & Header
-			body, err := json.Marshal(domain.PullRequestEvent{
+			body, err := json.Marshal(PullRequestEvent{
 				Action: "opened",
 			})
 			assert.Nil(t, err)
@@ -166,7 +166,7 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
 			// Create Body & Header
-			body, err := json.Marshal(domain.IssueCommentEvent{
+			body, err := json.Marshal(IssueCommentEvent{
 				Action:  "created",
 				Comment: GitHubComment{Body: "/request"},
 			})
@@ -196,7 +196,7 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
 			// Create Body & Header
-			body, err := json.Marshal(domain.IssueCommentEvent{
+			body, err := json.Marshal(IssueCommentEvent{
 				Action:  "created",
 				Comment: GitHubComment{Body: "/reviewed"},
 			})
@@ -226,14 +226,14 @@ func TestGitHubWebhookController(t *testing.T) {
 }
 
 type GitHubComment struct {
-	URL               string            `json:"url"`
-	HTMLURL           string            `json:"html_url"`
-	IssueURL          string            `json:"issue_url"`
-	ID                int               `json:"id"`
-	NodeID            string            `json:"node_id"`
-	User              domain.GitHubUser `json:"user"`
-	CreatedAt         time.Time         `json:"created_at"`
-	UpdatedAt         time.Time         `json:"updated_at"`
-	AuthorAssociation string            `json:"author_association"`
-	Body              string            `json:"body"`
+	URL               string     `json:"url"`
+	HTMLURL           string     `json:"html_url"`
+	IssueURL          string     `json:"issue_url"`
+	ID                int        `json:"id"`
+	NodeID            string     `json:"node_id"`
+	User              GitHubUser `json:"user"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+	AuthorAssociation string     `json:"author_association"`
+	Body              string     `json:"body"`
 }

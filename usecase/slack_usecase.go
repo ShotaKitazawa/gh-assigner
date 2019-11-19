@@ -1,8 +1,8 @@
 package usecase
 
 import (
+	"github.com/ShotaKitazawa/gh-assigner/domain"
 	"github.com/ShotaKitazawa/gh-assigner/usecase/interfaces"
-	"github.com/nlopes/slack"
 )
 
 // ChatInteractor is Interactor
@@ -14,7 +14,7 @@ type ChatInteractor struct {
 	Logger                 interfaces.Logger
 }
 
-func (i ChatInteractor) Hello(ev *slack.MessageEvent) (err error) {
-	err = i.ChatInfrastructure.HelloMessage("hello", ev.Channel)
+func (i ChatInteractor) Hello(msg domain.SlackMessage) (err error) {
+	err = i.ChatInfrastructure.HelloMessage("hello", msg.ChannelID)
 	return
 }

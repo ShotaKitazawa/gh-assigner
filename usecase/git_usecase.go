@@ -32,100 +32,69 @@ var (
 )
 
 // OpenPullRequest is usecase
-func (i GitInteractor) OpenPullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
-	// Webhook request variable
-	senderUserName := pullRequest.Sender.Login
-	organizationName := pullRequest.Repository.Owner.Login
-	repositoryName := pullRequest.Repository.Name
-	pullRequestID := uint(pullRequest.PullRequest.Number)
-	pullRequestTitle := pullRequest.PullRequest.Title
-	pullRequestURL := pullRequest.PullRequest.IssueURL
-
+func (i GitInteractor) OpenPullRequest(pr domain.GitHubPullRequest) (res domain.GitHubPullRequestResponse, err error) {
 	// Create PullRequest record
-	err = i.DatabaseInfrastructure.CreatePullRequest(senderUserName, organizationName, repositoryName, pullRequestID, pullRequestTitle)
+	err = i.DatabaseInfrastructure.CreatePullRequest(pr.SenderUsername, pr.Organization, pr.Repository, pr.Number, pr.Title)
 	if err != nil {
 		return
 	}
 
 	// Send message to PullRequest
-	err = i.GitInfrastructure.PostMessageToIssue(pullRequestURL, pullRequestOpenedMessage)
+	err = i.GitInfrastructure.PostMessageToIssue(pr.URL, pullRequestOpenedMessage)
 	if err != nil {
 		return
 	}
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
 
 // MergePullRequest is usecase
-func (i GitInteractor) MergePullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
-	// Webhook request variable
-	senderUserName := pullRequest.Sender.Login
-	organizationName := pullRequest.Repository.Owner.Login
-	repositoryName := pullRequest.Repository.Name
-	pullRequestID := uint(pullRequest.PullRequest.Number)
-	pullRequestTitle := pullRequest.PullRequest.Title
-	pullRequestURL := pullRequest.PullRequest.IssueURL
-
+func (i GitInteractor) MergePullRequest(pr domain.GitHubPullRequest) (res domain.GitHubPullRequestResponse, err error) {
 	// update PullRequst record
-	err = i.DatabaseInfrastructure.MergePullRequest(senderUserName, organizationName, repositoryName, pullRequestID, pullRequestTitle)
+	err = i.DatabaseInfrastructure.MergePullRequest(pr.SenderUsername, pr.Organization, pr.Repository, pr.Number, pr.Title)
 	if err != nil {
 		return
 	}
 
 	// get PullRequest TTL
-	pullRequestTTL, err := i.DatabaseInfrastructure.GetPullRequestTTL(organizationName, repositoryName, pullRequestID)
+	pullRequestTTL, err := i.DatabaseInfrastructure.GetPullRequestTTL(pr.Organization, pr.Repository, pr.Number)
 	pullRequestMergedMessage := fmt.Sprintf("レビュー待ち時間総計: %v", pullRequestTTL)
 
 	// Send message to PullRequest
-	err = i.GitInfrastructure.PostMessageToIssue(pullRequestURL, pullRequestMergedMessage)
+	err = i.GitInfrastructure.PostMessageToIssue(pr.URL, pullRequestMergedMessage)
 	if err != nil {
 		return
 	}
 
 	// Unlabeled
-	err = i.GitInfrastructure.UnlabelIssue(pullRequestURL)
+	err = i.GitInfrastructure.UnlabelIssue(pr.URL)
 	if err != nil {
 		return
 	}
 
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
 
 // ClosePullRequest is usecase
-func (i GitInteractor) ClosePullRequest(pullRequest domain.PullRequestEvent) (res domain.PullRequestEventResponse, err error) {
-	// Webhook request variable
-	senderUserName := pullRequest.Sender.Login
-	organizationName := pullRequest.Repository.Owner.Login
-	repositoryName := pullRequest.Repository.Name
-	pullRequestID := uint(pullRequest.PullRequest.Number)
-	pullRequestTitle := pullRequest.PullRequest.Title
-	pullRequestURL := pullRequest.PullRequest.IssueURL
-
+func (i GitInteractor) ClosePullRequest(pr domain.GitHubPullRequest) (res domain.GitHubPullRequestResponse, err error) {
 	// update PullRequst record
-	err = i.DatabaseInfrastructure.ClosePullRequest(senderUserName, organizationName, repositoryName, pullRequestID, pullRequestTitle)
+	err = i.DatabaseInfrastructure.ClosePullRequest(pr.SenderUsername, pr.Organization, pr.Repository, pr.Number, pr.Title)
 	if err != nil {
 		return
 	}
 
 	// Unlabeled
-	err = i.GitInfrastructure.UnlabelIssue(pullRequestURL)
+	err = i.GitInfrastructure.UnlabelIssue(pr.URL)
 	if err != nil {
 		return
 	}
 
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
 
 // CommentRequest is usecase
-func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// Webhook request variable
-	senderUserName := issueComment.Sender.Login
-	organizationName := issueComment.Repository.Owner.Login
-	repositoryName := issueComment.Repository.Name
-	pullRequestID := uint(issueComment.Issue.Number)
-	pullRequestURL := issueComment.Issue.URL
-
+func (i GitInteractor) CommentRequest(pr domain.GitHubPullRequest) (res domain.GitHubPullRequestResponse, err error) {
 	// Create RequestAction record
-	err = i.DatabaseInfrastructure.CreateRequestAction(senderUserName, organizationName, repositoryName, pullRequestID)
+	err = i.DatabaseInfrastructure.CreateRequestAction(pr.SenderUsername, pr.Organization, pr.Repository, pr.Number)
 	if err != nil {
 		return
 	}
@@ -136,33 +105,25 @@ func (i GitInteractor) CommentRequest(issueComment domain.IssueCommentEvent) (re
 	assigneeUserName := "ShotaKitazawa"
 
 	// Labeled "review" & assign user to PullRequest
-	err = i.GitInfrastructure.LabelAndAssignIssue(pullRequestURL, assigneeUserName, requestLabel)
+	err = i.GitInfrastructure.LabelAndAssignIssue(pr.URL, assigneeUserName, requestLabel)
 	if err != nil {
 		return
 	}
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }
 
 // CommentReviewed is usecase
-func (i GitInteractor) CommentReviewed(issueComment domain.IssueCommentEvent) (res domain.PullRequestEventResponse, err error) {
-	// Webhook request variable
-	senderUserName := issueComment.Sender.Login
-	organizationName := issueComment.Repository.Owner.Login
-	repositoryName := issueComment.Repository.Name
-	pullRequestID := uint(issueComment.Issue.Number)
-	pullRequestURL := issueComment.Issue.URL
-	openedPullRequestUserName := issueComment.Issue.User.Login
-
+func (i GitInteractor) CommentReviewed(pr domain.GitHubPullRequest) (res domain.GitHubPullRequestResponse, err error) {
 	// Create RequestAction record
-	err = i.DatabaseInfrastructure.CreateReviewedAction(senderUserName, organizationName, repositoryName, pullRequestID)
+	err = i.DatabaseInfrastructure.CreateReviewedAction(pr.SenderUsername, pr.Organization, pr.Repository, pr.Number)
 	if err != nil {
 		return
 	}
 
 	// Labeled "wip" & assign user to PullRequest
-	err = i.GitInfrastructure.LabelAndAssignIssue(pullRequestURL, openedPullRequestUserName, reviewedLabel)
+	err = i.GitInfrastructure.LabelAndAssignIssue(pr.URL, pr.OpenedUsername, reviewedLabel)
 	if err != nil {
 		return
 	}
-	return domain.PullRequestEventResponse{}, nil
+	return domain.GitHubPullRequestResponse{}, nil
 }

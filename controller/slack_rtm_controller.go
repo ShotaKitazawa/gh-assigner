@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/ShotaKitazawa/gh-assigner/controller/interfaces"
+	"github.com/ShotaKitazawa/gh-assigner/domain"
 	"github.com/nlopes/slack"
 )
 
@@ -13,6 +14,9 @@ type SlackRTMController struct {
 
 func (c SlackRTMController) MessageEvent(ev *slack.MessageEvent) (err error) {
 	//TODO 引数を domain に寄せる
-	err = c.Interactor.Hello(ev)
+	err = c.Interactor.Hello(domain.SlackMessage{
+		ChannelID: ev.Channel,
+		Message:   ev.Msg.Text,
+	})
 	return err
 }

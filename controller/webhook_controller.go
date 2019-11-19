@@ -22,16 +22,25 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 	// Switch by Request Header
 	switch ctx.Request.Header.Get("X-GitHub-Event") {
 	case "pull_request":
-		request := domain.PullRequestEvent{}
-		err = ctx.Bind(&request)
+		pullRequest := PullRequestEvent{}
+		err = ctx.Bind(&pullRequest)
 		if err != nil {
 			c.Logger.Error(err.Error())
 			ctx.JSON(http.StatusInternalServerError, err)
 			return err
 		}
+		request := domain.GitHubPullRequest{
+			Organization:   pullRequest.Repository.Owner.Login,
+			Repository:     pullRequest.Repository.Name,
+			Number:         uint(pullRequest.PullRequest.Number),
+			Title:          pullRequest.PullRequest.Title,
+			URL:            pullRequest.PullRequest.IssueURL,
+			SenderUsername: pullRequest.Sender.Login,
+			OpenedUsername: pullRequest.PullRequest.User.Login,
+		}
 
 		// Switch by Request Body
-		switch request.Action {
+		switch pullRequest.Action {
 		case "opened", "reopened": // user Open/ReOpen PullRequest
 			res, err := c.Interactor.OpenPullRequest(request)
 			if err != nil {
@@ -41,9 +50,9 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 			}
 			ctx.JSON(http.StatusOK, res)
 		case "closed":
-			switch request.PullRequest.Merged {
+			switch pullRequest.PullRequest.Merged {
 			case true:
-				res, err := c.Interactor.MergePullRequest(request)
+				res, err := c.Interactor.MergePullRequest(domain.GitHubPullRequest{})
 				if err != nil {
 					c.Logger.Error(err.Error())
 					ctx.JSON(http.StatusInternalServerError, err)
@@ -62,18 +71,27 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 		}
 
 	case "issue_comment":
-		request := domain.IssueCommentEvent{}
-		err := ctx.Bind(&request)
+		issue := IssueCommentEvent{}
+		err := ctx.Bind(&issue)
 		if err != nil {
 			c.Logger.Error(err.Error())
 			ctx.JSON(http.StatusInternalServerError, err)
 			return err
 		}
+		request := domain.GitHubPullRequest{
+			Organization:   issue.Repository.Owner.Login,
+			Repository:     issue.Repository.Name,
+			Number:         uint(issue.Issue.Number),
+			Title:          issue.Issue.Title,
+			URL:            issue.Issue.URL,
+			SenderUsername: issue.Sender.Login,
+			OpenedUsername: issue.Issue.User.Login,
+		}
 
 		// Switch by Request Body
-		switch request.Action {
+		switch issue.Action {
 		case "created": // User created Comment in PullRequest
-			command := trimNewlineChar(request.Comment.Body)
+			command := trimNewlineChar(issue.Comment.Body)
 			if !strings.HasPrefix(command, "/") {
 				return nil
 			}
