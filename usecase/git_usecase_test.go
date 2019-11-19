@@ -20,6 +20,7 @@ func newGitInteractor() *GitInteractor {
 		GitInfrastructure:      &GitInfrastructureMock{},
 		DatabaseInfrastructure: &DatabaseInfrastructureMock{},
 		CalendarInfrastructure: &CalendarInfrastructureMock{},
+		ChatInfrastructure:     &ChatInfrastructureMock{},
 	}
 }
 
@@ -67,9 +68,18 @@ func (r DatabaseInfrastructureMock) GetPullRequestTTL(organizationName, reposito
 	return 0, nil
 }
 
-func (r CalendarInfrastructureMock) GetStaffThisWeek() (string, error) {
+func (r CalendarInfrastructureMock) GetCurrentStaff() (string, error) {
 	// TODO
 	return "", nil
+}
+
+func (r ChatInfrastructureMock) SendMessage(string, string) error {
+	// TODO
+	return nil
+}
+func (r ChatInfrastructureMock) SendMessageToDefaultChannel(string) error {
+	// TODO
+	return nil
 }
 
 // TODO
