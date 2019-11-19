@@ -13,6 +13,6 @@ type GitInteractor interface {
 	CommentReviewed(domain.IssueCommentEvent) (domain.PullRequestEventResponse, error)
 }
 
-type SlackInteractor interface {
+type ChatInteractor interface {
 	Hello(*slack.MessageEvent) (err error)
 }

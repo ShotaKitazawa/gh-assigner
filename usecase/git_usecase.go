@@ -12,6 +12,7 @@ type GitInteractor struct {
 	GitInfrastructure      interfaces.GitInfrastructure
 	DatabaseInfrastructure interfaces.DatabaseInfrastructure
 	CalendarInfrastructure interfaces.CalendarInfrastructure
+	ChatInfrastructure     interfaces.ChatInfrastructure
 	Logger                 interfaces.Logger
 }
 

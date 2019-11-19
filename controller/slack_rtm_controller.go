@@ -7,7 +7,7 @@ import (
 
 // GitHubWebhookController is Controller
 type SlackRTMController struct {
-	Interactor interfaces.SlackInteractor
+	Interactor interfaces.ChatInteractor
 	Logger     interfaces.Logger
 }
 

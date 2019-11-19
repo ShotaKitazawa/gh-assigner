@@ -25,6 +25,6 @@ type CalendarInfrastructure interface {
 	GetStaffThisWeek() (string, error)
 }
 
-type SlackInfrastructure interface {
+type ChatInfrastructure interface {
 	HelloMessage(string, string) error
 }

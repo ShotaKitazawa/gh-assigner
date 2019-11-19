@@ -3,13 +3,12 @@ package external
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql" //justifying
 	"github.com/nlopes/slack"
 
-	"github.com/ShotaKitazawa/gh-assigner/pkg/slackutils"
+	"github.com/ShotaKitazawa/gh-assigner/external/slackrtm"
 )
 
 var (
@@ -33,7 +32,6 @@ func Run(ctx context.Context) {
 		case err = <-slackRunnnerChan:
 			panic(err)
 		}
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -61,7 +59,7 @@ func slackRunner(ctx context.Context) {
 		panic(err)
 	}
 	channels := strings.Split(channelsStr, ",")
-	botUsername, err := getContextString(ctx, slackBotUserContextKey)
+	botID, err := getContextString(ctx, slackBotUserContextKey)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +67,7 @@ func slackRunner(ctx context.Context) {
 	if err != nil {
 		panic(err)
 	}
-	c := slackutils.New(token, channels, botUsername)
+	c := slackrtm.New(token, channels, botID)
 
 	slackRunnnerChan <- c.Run(func(ev *slack.MessageEvent) { slackRTMController.MessageEvent(ev) })
 }

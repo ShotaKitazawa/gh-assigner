@@ -1,4 +1,4 @@
-package slackutils
+package slackrtm
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 
 	"github.com/nlopes/slack"
 )
+
+type MessageEvent slack.MessageEvent
 
 type Listener struct {
 	Client     *slack.Client
@@ -33,10 +35,6 @@ func (s *Listener) Run(f func(ev *slack.MessageEvent)) error {
 		case *slack.MessageEvent:
 			for _, channelName := range s.ChannelIDs {
 				if ev.Channel == channelName {
-					// for debug
-					fmt.Println(ev.Msg.Text)
-					fmt.Println(fmt.Sprintf("<@%s> ", ev.BotID))
-
 					// Only response mention to bot. Ignore else.
 					if strings.HasPrefix(ev.Msg.Text, fmt.Sprintf("<@%s> ", s.BotUser)) {
 						f(ev)

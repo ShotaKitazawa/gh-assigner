@@ -3,17 +3,16 @@ package external
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
 
 	"github.com/ShotaKitazawa/gh-assigner/controller"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/github"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/mysql"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/slackrtm"
-	"github.com/ShotaKitazawa/gh-assigner/pkg/slackutils"
 	"github.com/ShotaKitazawa/gh-assigner/usecase"
 )
 
@@ -21,7 +20,7 @@ var (
 	db          *sqlx.DB
 	ghUser      string
 	ghToken     string
-	slackClient *slackutils.Listener
+	slackClient *slack.Client
 )
 
 // Initialize is initialize shared setting with all Controller
@@ -47,20 +46,11 @@ func Initialize(ctx context.Context) func() {
 	}
 
 	// Get Slack Channel & Token
-	channelsStr, err := getContextString(ctx, slackChannelsContextKey)
-	if err != nil {
-		panic(err)
-	}
-	channels := strings.Split(channelsStr, ",")
-	botUsername, err := getContextString(ctx, slackBotUserContextKey)
-	if err != nil {
-		panic(err)
-	}
 	token, err := getContextString(ctx, slackTokenContextKey)
 	if err != nil {
 		panic(err)
 	}
-	slackClient = slackutils.New(token, channels, botUsername)
+	slackClient = slack.New(token)
 
 	return func() {
 		db.Close()
@@ -81,6 +71,10 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 				DB:     db,
 				Logger: &Logger{},
 			},
+			ChatInfrastructure: &slackrtm.SlackInfrastructure{
+				Client: slackClient,
+				Logger: &Logger{},
+			},
 			/*
 				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
 					Credential: TODO,
@@ -95,7 +89,7 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 // NewSlackRTMController is initialize Controller, Interactor and Infrastructure.
 func NewSlackRTMController(ctx context.Context) *controller.SlackRTMController {
 	return &controller.SlackRTMController{
-		Interactor: &usecase.SlackInteractor{
+		Interactor: &usecase.ChatInteractor{
 			GitInfrastructure: &github.GitInfrastructure{
 				Client: &http.Client{Timeout: time.Duration(10) * time.Second},
 				User:   ghUser,
@@ -106,9 +100,9 @@ func NewSlackRTMController(ctx context.Context) *controller.SlackRTMController {
 				DB:     db,
 				Logger: &Logger{},
 			},
-			SlackInfrastructure: &slackrtm.SlackInfrastructure{
-				Listener: slackClient,
-				Logger:   &Logger{},
+			ChatInfrastructure: &slackrtm.SlackInfrastructure{
+				Client: slackClient,
+				Logger: &Logger{},
 			},
 			/*
 				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
