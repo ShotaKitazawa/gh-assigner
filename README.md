@@ -2,6 +2,10 @@
 
 <img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/kairu.png" width="200px">
 
+# Architecture
+
+<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/architecture.png" width="400px">
+
 # Usage
 
 * prepare config.yml
@@ -13,17 +17,16 @@ slack-bot-id: <slack-bot-id>
 slack-bot-token: <slack-bot-token>
 slack-channel-ids: <slack-channel-id>,<slack-channel-id>,...
 slack-default-channel-id: <slack-channel-id>
+google-calendar-id: <google-calendar-id>
 ```
 
 * run
+    * `config.yaml`: created above
+    * `credential.json`: gcp service account key
 
 ```
-go run main.go --config config.yml
+go run main.go --config config.yml --gcp-credential-path credential.json
 ```
-
-# Architecture
-
-<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/architecture.png" width="400px">
 
 # Migrate DB
 
