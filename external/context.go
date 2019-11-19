@@ -18,6 +18,8 @@ const (
 	slackBotUserContextKey        contextKey = "slack_botuser"
 	slackDefaultChannelContextKey contextKey = "slack_default_channel"
 	slackTokenContextKey          contextKey = "slack_token"
+	gcpCredentialContextKey       contextKey = "gcp_credential"
+	googleCalendarContextKey      contextKey = "google_calendar"
 )
 
 func getContextString(ctx context.Context, key contextKey) (result string, err error) {

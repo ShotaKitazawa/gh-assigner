@@ -99,10 +99,11 @@ func (i GitInteractor) CommentRequest(pr domain.GitHubPullRequest) (res domain.G
 		return
 	}
 
-	// TODO: カレンダーから担当者を取ってくる
-	//assigneeUserName, err := i.CalendarInfrastructure.GetStaffThisWeek()
-	//err = i.GitInfrastructure.LabelAndAssignIssue(issueComment.PullRequest.IssueURL, person, "review")
-	assigneeUserName := "ShotaKitazawa"
+	// Get current SRE-Order staff
+	assigneeUserName, err := i.CalendarInfrastructure.GetCurrentStaff()
+	if err != nil {
+		return
+	}
 
 	// Labeled "review" & assign user to PullRequest
 	err = i.GitInfrastructure.LabelAndAssignIssue(pr.URL, assigneeUserName, requestLabel)
@@ -115,7 +116,6 @@ func (i GitInteractor) CommentRequest(pr domain.GitHubPullRequest) (res domain.G
 	if err != nil {
 		return
 	}
-
 
 	return domain.GitHubPullRequestResponse{}, nil
 }

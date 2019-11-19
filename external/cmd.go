@@ -30,12 +30,15 @@ var rootCmd = &cobra.Command{
 				viper.GetUint("db-port"),
 				viper.GetString("db-table-name"),
 			))
+
 		ctx = context.WithValue(ctx, ghUserContextKey, viper.GetString("github-user"))
 		ctx = context.WithValue(ctx, ghTokenContextKey, viper.GetString("github-token"))
 		ctx = context.WithValue(ctx, slackBotUserContextKey, viper.GetString("slack-bot-id"))
 		ctx = context.WithValue(ctx, slackTokenContextKey, viper.GetString("slack-bot-token"))
 		ctx = context.WithValue(ctx, slackChannelsContextKey, viper.GetString("slack-channel-ids"))
 		ctx = context.WithValue(ctx, slackDefaultChannelContextKey, viper.GetString("slack-default-channel-id"))
+		ctx = context.WithValue(ctx, googleCalendarContextKey, viper.GetString("google-calendar-id"))
+		ctx = context.WithValue(ctx, gcpCredentialContextKey, viper.GetString("gcp-credential-path"))
 
 		// Run
 		Run(ctx)
@@ -67,8 +70,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("slack-bot-token", "", "", "Slack Token for bot")
 	rootCmd.PersistentFlags().StringP("slack-channel-ids", "", "", "Slack Channel IDs to activate bot (comma separated)")
 	rootCmd.PersistentFlags().StringP("slack-default-channel-id", "", "", "Slack Channel ID to send message by bot initiatively")
+	rootCmd.PersistentFlags().StringP("google-calendar-id", "", "", "GoogleCalendar ID")
+	rootCmd.PersistentFlags().StringP("gcp-credential-path", "c", "", "Path to GCP Credential using to read GoogleCalendar")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "f", "", "Path to config file")
 	viper.BindPFlag("bind-address", rootCmd.PersistentFlags().Lookup("bind-address"))
 	viper.BindPFlag("bind-port", rootCmd.PersistentFlags().Lookup("bind-port"))
 	viper.BindPFlag("db-user", rootCmd.PersistentFlags().Lookup("db-user"))
@@ -82,9 +87,11 @@ func init() {
 	viper.BindPFlag("slack-channel-ids", rootCmd.PersistentFlags().Lookup("slack-channel-ids"))
 	viper.BindPFlag("slack-default-channel-id", rootCmd.PersistentFlags().Lookup("slack-default-channel-id"))
 	viper.BindPFlag("slack-bot-token", rootCmd.PersistentFlags().Lookup("slack-bot-token"))
-
+	viper.BindPFlag("google-calendar-id", rootCmd.PersistentFlags().Lookup("google-calendar-id"))
+	viper.BindPFlag("gcp-credential-path", rootCmd.PersistentFlags().Lookup("gcp-credential-path"))
 }
 
+// Execute is entrypoint
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)

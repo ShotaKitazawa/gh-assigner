@@ -8,9 +8,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
+	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 
 	"github.com/ShotaKitazawa/gh-assigner/controller"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/github"
+	"github.com/ShotaKitazawa/gh-assigner/infrastructure/googlecalendar"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/mysql"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/slackrepo"
 	"github.com/ShotaKitazawa/gh-assigner/usecase"
@@ -22,6 +25,8 @@ var (
 	ghToken             string
 	slackClient         *slack.Client
 	slackDefaultChannel string
+	calendarID          string
+	calendarService     *calendar.Service
 )
 
 // Initialize is initialize shared setting with all Controller
@@ -57,6 +62,18 @@ func Initialize(ctx context.Context) func() {
 	}
 	slackClient = slack.New(token)
 
+	// Get GoogleCalendar ID & Service
+	calendarID, err = getContextString(ctx, googleCalendarContextKey)
+	if err != nil {
+		panic(err)
+	}
+	gcpCredentialPath, err := getContextString(ctx, gcpCredentialContextKey)
+	if err != nil {
+		panic(err)
+	}
+	calendarCtx := context.Background()
+	calendarService, err = calendar.NewService(calendarCtx, option.WithCredentialsFile(gcpCredentialPath))
+
 	return func() {
 		db.Close()
 	}
@@ -76,16 +93,16 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 				DB:     db,
 				Logger: &Logger{},
 			},
-			ChatInfrastructure: &slackrepo.SlackInfrastructure{
+			ChatInfrastructure: &slackrepo.ChatInfrastructure{
 				Client:  slackClient,
 				Channel: slackDefaultChannel,
 				Logger:  &Logger{},
 			},
-			/*
-				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
-					Credential: TODO,
-				}
-			*/
+			CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
+				ID:      calendarID,
+				Service: calendarService,
+				Logger:  &Logger{},
+			},
 			Logger: &Logger{},
 		},
 		Logger: &Logger{},
@@ -106,16 +123,16 @@ func NewSlackRTMController(ctx context.Context) *controller.SlackRTMController {
 				DB:     db,
 				Logger: &Logger{},
 			},
-			ChatInfrastructure: &slackrepo.SlackInfrastructure{
+			ChatInfrastructure: &slackrepo.ChatInfrastructure{
 				Client:  slackClient,
 				Channel: slackDefaultChannel,
 				Logger:  &Logger{},
 			},
-			/*
-				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
-					Credential: TODO,
-				}
-			*/
+			CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
+				ID:      calendarID,
+				Service: calendarService,
+				Logger:  &Logger{},
+			},
 			Logger: &Logger{},
 		},
 	}

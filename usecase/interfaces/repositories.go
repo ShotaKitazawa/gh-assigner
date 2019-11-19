@@ -22,7 +22,7 @@ type DatabaseInfrastructure interface {
 }
 
 type CalendarInfrastructure interface {
-	GetStaffThisWeek() (string, error)
+	GetCurrentStaff() (string, error)
 }
 
 type ChatInfrastructure interface {
