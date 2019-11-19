@@ -15,6 +15,6 @@ type ChatInteractor struct {
 }
 
 func (i ChatInteractor) Hello(msg domain.SlackMessage) (err error) {
-	err = i.ChatInfrastructure.HelloMessage("hello", msg.ChannelID)
+	err = i.ChatInfrastructure.SendMessage("Hello World!", msg.ChannelID)
 	return
 }

@@ -32,9 +32,10 @@ var rootCmd = &cobra.Command{
 			))
 		ctx = context.WithValue(ctx, ghUserContextKey, viper.GetString("github-user"))
 		ctx = context.WithValue(ctx, ghTokenContextKey, viper.GetString("github-token"))
-		ctx = context.WithValue(ctx, slackChannelsContextKey, viper.GetString("slack-channel-ids"))
 		ctx = context.WithValue(ctx, slackBotUserContextKey, viper.GetString("slack-bot-id"))
-		ctx = context.WithValue(ctx, slackTokenContextKey, viper.GetString("slack-token"))
+		ctx = context.WithValue(ctx, slackTokenContextKey, viper.GetString("slack-bot-token"))
+		ctx = context.WithValue(ctx, slackChannelsContextKey, viper.GetString("slack-channel-ids"))
+		ctx = context.WithValue(ctx, slackDefaultChannelContextKey, viper.GetString("slack-default-channel-id"))
 
 		// Run
 		Run(ctx)
@@ -62,9 +63,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("db-table-name", "", "sample", "DB table name")
 	rootCmd.PersistentFlags().StringP("github-user", "", "", "GitHub User")
 	rootCmd.PersistentFlags().StringP("github-token", "", "", "GitHub token")
-	rootCmd.PersistentFlags().StringP("slack-channel-ids", "", "", "Slack Channel IDs to enable bot (comma separated)")
 	rootCmd.PersistentFlags().StringP("slack-bot-id", "", "", "Slack Bot ID")
-	rootCmd.PersistentFlags().StringP("slack-token", "", "", "Slack token for bot")
+	rootCmd.PersistentFlags().StringP("slack-bot-token", "", "", "Slack Token for bot")
+	rootCmd.PersistentFlags().StringP("slack-channel-ids", "", "", "Slack Channel IDs to activate bot (comma separated)")
+	rootCmd.PersistentFlags().StringP("slack-default-channel-id", "", "", "Slack Channel ID to send message by bot initiatively")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 	viper.BindPFlag("bind-address", rootCmd.PersistentFlags().Lookup("bind-address"))
@@ -76,9 +78,10 @@ func init() {
 	viper.BindPFlag("db-table-name", rootCmd.PersistentFlags().Lookup("db-table-name"))
 	viper.BindPFlag("github-user", rootCmd.PersistentFlags().Lookup("github-user"))
 	viper.BindPFlag("github-token", rootCmd.PersistentFlags().Lookup("github-token"))
-	viper.BindPFlag("slack-channel-ids", rootCmd.PersistentFlags().Lookup("slack-channel-ids"))
 	viper.BindPFlag("slack-bot-id", rootCmd.PersistentFlags().Lookup("slack-bot-id"))
-	viper.BindPFlag("slack-token", rootCmd.PersistentFlags().Lookup("slack-token"))
+	viper.BindPFlag("slack-channel-ids", rootCmd.PersistentFlags().Lookup("slack-channel-ids"))
+	viper.BindPFlag("slack-default-channel-id", rootCmd.PersistentFlags().Lookup("slack-default-channel-id"))
+	viper.BindPFlag("slack-bot-token", rootCmd.PersistentFlags().Lookup("slack-bot-token"))
 
 }
 

@@ -109,6 +109,14 @@ func (i GitInteractor) CommentRequest(pr domain.GitHubPullRequest) (res domain.G
 	if err != nil {
 		return
 	}
+
+	// Send message to Slack
+	err = i.ChatInfrastructure.SendMessageToDefaultChannel("これはtestです")
+	if err != nil {
+		return
+	}
+
+
 	return domain.GitHubPullRequestResponse{}, nil
 }
 

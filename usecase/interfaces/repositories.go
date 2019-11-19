@@ -26,5 +26,6 @@ type CalendarInfrastructure interface {
 }
 
 type ChatInfrastructure interface {
-	HelloMessage(string, string) error
+	SendMessage(string, string) error
+	SendMessageToDefaultChannel(string) error
 }

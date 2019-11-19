@@ -12,15 +12,16 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/controller"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/github"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/mysql"
-	"github.com/ShotaKitazawa/gh-assigner/infrastructure/slackrtm"
+	"github.com/ShotaKitazawa/gh-assigner/infrastructure/slackrepo"
 	"github.com/ShotaKitazawa/gh-assigner/usecase"
 )
 
 var (
-	db          *sqlx.DB
-	ghUser      string
-	ghToken     string
-	slackClient *slack.Client
+	db                  *sqlx.DB
+	ghUser              string
+	ghToken             string
+	slackClient         *slack.Client
+	slackDefaultChannel string
 )
 
 // Initialize is initialize shared setting with all Controller
@@ -45,7 +46,11 @@ func Initialize(ctx context.Context) func() {
 		panic(err)
 	}
 
-	// Get Slack Channel & Token
+	// Get Slack DefaultChannel & Token
+	slackDefaultChannel, err = getContextString(ctx, slackDefaultChannelContextKey)
+	if err != nil {
+		panic(err)
+	}
 	token, err := getContextString(ctx, slackTokenContextKey)
 	if err != nil {
 		panic(err)
@@ -71,9 +76,10 @@ func NewGitHubWebhookController(ctx context.Context) *controller.GitHubWebhookCo
 				DB:     db,
 				Logger: &Logger{},
 			},
-			ChatInfrastructure: &slackrtm.SlackInfrastructure{
-				Client: slackClient,
-				Logger: &Logger{},
+			ChatInfrastructure: &slackrepo.SlackInfrastructure{
+				Client:  slackClient,
+				Channel: slackDefaultChannel,
+				Logger:  &Logger{},
 			},
 			/*
 				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
@@ -100,9 +106,10 @@ func NewSlackRTMController(ctx context.Context) *controller.SlackRTMController {
 				DB:     db,
 				Logger: &Logger{},
 			},
-			ChatInfrastructure: &slackrtm.SlackInfrastructure{
-				Client: slackClient,
-				Logger: &Logger{},
+			ChatInfrastructure: &slackrepo.SlackInfrastructure{
+				Client:  slackClient,
+				Channel: slackDefaultChannel,
+				Logger:  &Logger{},
 			},
 			/*
 				CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
