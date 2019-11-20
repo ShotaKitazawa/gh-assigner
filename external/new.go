@@ -3,6 +3,7 @@ package external
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -14,6 +15,7 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/controller"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/github"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/googlecalendar"
+	"github.com/ShotaKitazawa/gh-assigner/infrastructure/image"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/mysql"
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/slackrepo"
 	"github.com/ShotaKitazawa/gh-assigner/usecase"
@@ -27,6 +29,7 @@ var (
 	slackDefaultChannel string
 	calendarID          string
 	calendarService     *calendar.Service
+	currentPath         string
 )
 
 // Initialize is initialize shared setting with all Controller
@@ -73,6 +76,12 @@ func Initialize(ctx context.Context) func() {
 	}
 	calendarCtx := context.Background()
 	calendarService, err = calendar.NewService(calendarCtx, option.WithCredentialsFile(gcpCredentialPath))
+
+	// Get current path
+	currentPath, err = os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
 	return func() {
 		db.Close()
@@ -133,7 +142,11 @@ func NewSlackRTMController(ctx context.Context) *controller.SlackRTMController {
 				Service: calendarService,
 				Logger:  &Logger{},
 			},
+			ImageInfrastructure: &image.ImageInfrastructure{
+				Path: currentPath + "/images",
+			},
 			Logger: &Logger{},
 		},
+		Logger: &Logger{},
 	}
 }

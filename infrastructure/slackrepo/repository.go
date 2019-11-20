@@ -13,15 +13,24 @@ type ChatInfrastructure struct {
 }
 
 func (r ChatInfrastructure) SendMessage(msg, channel string) (err error) {
-	if _, _, err := r.Client.PostMessage(channel, slack.MsgOptionText(msg, false)); err != nil {
-		return err
-	}
+	_, _, err = r.Client.PostMessage(channel, slack.MsgOptionText(msg, false))
 	return
 }
 
 func (r ChatInfrastructure) SendMessageToDefaultChannel(msg string) (err error) {
-	if _, _, err := r.Client.PostMessage(r.Channel, slack.MsgOptionText(msg, false)); err != nil {
-		return err
+	return r.SendMessage(msg, r.Channel)
+}
+
+func (r ChatInfrastructure) SendImage(filepath, channel string) (err error) {
+	params := slack.FileUploadParameters{
+		Filetype: "image",
+		File:     filepath,
+		Channels: []string{channel},
 	}
+	_, err = r.Client.UploadFile(params)
 	return
+}
+
+func (r ChatInfrastructure) SendImageToDefaultChannel(filepath string) (err error) {
+	return r.SendImage(filepath, r.Channel)
 }

@@ -37,6 +37,16 @@ func (c SlackRTMController) MessageEvent(ev *slack.MessageEvent) (err error) {
 			c.Logger.Error(err.Error())
 			return
 		}
+	case "review-ttl":
+		err = c.Interactor.SendImageWithReviewWaitTimeGraph(domain.SlackMessage{
+			ChannelID:  ev.Channel,
+			SenderName: ev.User,
+			Commands:   commands,
+		})
+		if err != nil {
+			c.Logger.Error(err.Error())
+			return
+		}
 	default:
 		err = c.Interactor.ShowDefault(domain.SlackMessage{
 			ChannelID:  ev.Channel,

@@ -18,4 +18,5 @@ type ChatInteractor interface {
 	Pong(domain.SlackMessage) error
 	ShowDefault(domain.SlackMessage) error
 	ShowHelp(domain.SlackMessage) error
+	SendImageWithReviewWaitTimeGraph(domain.SlackMessage) error
 }

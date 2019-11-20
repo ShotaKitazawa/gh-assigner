@@ -17,8 +17,6 @@ type DatabaseInfrastructure interface {
 	CreateRequestAction(string, string, string, uint) error
 	CreateReviewedAction(string, string, string, uint) error
 	GetPullRequestTTL(string, string, uint) (time.Duration, error)
-	//CreateUserIfNotExists(string) (uint, error)
-	//CreateRepositoryIfNotExists(string, string) (uint, error)
 }
 
 type CalendarInfrastructure interface {
@@ -28,4 +26,11 @@ type CalendarInfrastructure interface {
 type ChatInfrastructure interface {
 	SendMessage(string, string) error
 	SendMessageToDefaultChannel(string) error
+	SendImage(string, string) error
+	SendImageToDefaultChannel(string) error
+}
+
+type ImageInfrastructure interface {
+	CreateGraphWithReviewWaitTime([]time.Duration) (string, error)
+	DeleteFile(string) error
 }
