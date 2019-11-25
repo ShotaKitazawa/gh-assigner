@@ -233,7 +233,8 @@ SELECT a.requested_at, a.reviewed_at
 FROM repositories AS r
 JOIN pullrequests AS p ON r.id = p.repository_id
 JOIN actions AS a ON p.id = a.pullreq_id
-WHERE r.organization = ? AND r.repository = ? AND p.issue_id = ? `
+WHERE r.organization = ? AND r.repository = ? AND p.issue_id = ?
+`
 
 	timestamps := []struct {
 		RequestedAt *time.Time `db:"requested_at"`
@@ -248,6 +249,38 @@ WHERE r.organization = ? AND r.repository = ? AND p.issue_id = ? `
 			continue
 		}
 		duration += timestamp.ReviewedAt.Sub(*timestamp.RequestedAt)
+	}
+
+	return
+}
+
+func (r DatabaseInfrastructure) SelectPullRequestTTLs(organizationName, repositoryName string, period int) (durations []time.Duration, err error) {
+	query := `
+SELECT p.id, a.requested_at, a.reviewed_at
+FROM repositories AS r
+JOIN pullrequests AS p ON r.id = p.repository_id
+JOIN actions AS a ON p.id = a.pullreq_id
+WHERE r.organization = ? AND r.repository = ? AND p.closed_at > ?
+`
+
+	timestamps := []struct {
+		PullRequestID uint       `db:"id"`
+		RequestedAt   *time.Time `db:"requested_at"`
+		ReviewedAt    *time.Time `db:"reviewed_at"`
+	}{}
+	err = r.DB.Select(&timestamps, query, organizationName, repositoryName, time.Now().AddDate(0, 0, -1*period))
+	if err != nil {
+		return
+	}
+	durationsMap := make(map[uint]time.Duration, 128)
+	for _, timestamp := range timestamps {
+		if timestamp.RequestedAt == nil || timestamp.ReviewedAt == nil {
+			continue
+		}
+		durationsMap[timestamp.PullRequestID] += timestamp.ReviewedAt.Sub(*timestamp.RequestedAt)
+	}
+	for _, val := range durationsMap {
+		durations = append(durations, val)
 	}
 
 	return

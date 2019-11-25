@@ -19,6 +19,9 @@ type GitInteractor struct {
 const (
 	requestLabel  = "review"
 	reviewedLabel = "wip"
+
+	requestSlackMessage       = "これはtestです"
+	pullreqMergedSlackMessage = "レビュー待ち時間合計: %v"
 )
 
 var (
@@ -26,9 +29,9 @@ var (
 	pullRequestOpenedMessage = fmt.Sprintf(`
 以下のコマンドをコメントすることでプルリクエストのやり取りを行います。
 
-* %s/request%s : レビュイーがレビュアーにレビューをお願いするコマンド
-* %s/reviewed%s : レビュアーによるレビューにて修正点のある場合、レビュイーに返すコマンド
-`, "`", "`", "`", "`")
+* %[1]s/request%[1]s : レビュイーがレビュアーにレビューをお願いするコマンド
+* %[1]s/reviewed%[1]s : レビュアーによるレビューにて修正点のある場合、レビュイーに返すコマンド
+`, "`")
 )
 
 // OpenPullRequest is usecase
@@ -57,7 +60,7 @@ func (i GitInteractor) MergePullRequest(pr domain.GitHubPullRequest) (res domain
 
 	// get PullRequest TTL
 	pullRequestTTL, err := i.DatabaseInfrastructure.GetPullRequestTTL(pr.Organization, pr.Repository, pr.Number)
-	pullRequestMergedMessage := fmt.Sprintf("レビュー待ち時間総計: %v", pullRequestTTL)
+	pullRequestMergedMessage := fmt.Sprintf(pullreqMergedSlackMessage, pullRequestTTL)
 
 	// Send message to PullRequest
 	err = i.GitInfrastructure.PostMessageToIssue(pr.URL, pullRequestMergedMessage)
@@ -112,7 +115,7 @@ func (i GitInteractor) CommentRequest(pr domain.GitHubPullRequest) (res domain.G
 	}
 
 	// Send message to Slack
-	err = i.ChatInfrastructure.SendMessageToDefaultChannel("これはtestです")
+	err = i.ChatInfrastructure.SendMessageToDefaultChannel(requestSlackMessage)
 	if err != nil {
 		return
 	}

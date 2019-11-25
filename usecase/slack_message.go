@@ -14,11 +14,16 @@ var (
 > %s
 `, "`%[1]s "+CommandHelp+"`")
 
+	invalidCommandSlackMessage = fmt.Sprintf(`
+コマンドの引数が誤っています。以下のコマンドよりヘルプメッセージを確認してください。
+> %s
+`, "`%[1]s "+CommandHelp+"`")
+
 	HelpMessage = fmt.Sprintf(`
 > %s
 疎通確認
-> %s
-レビュー時間の取得
+> %s <OrganizationName> <RepositoryName> <Period>
+<Period> 日前までにCloseしたPullRequestにおけるレビュー時間の取得
 > %s
 ヘルプ出力
 `,

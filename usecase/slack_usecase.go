@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 	"github.com/ShotaKitazawa/gh-assigner/usecase/interfaces"
@@ -39,15 +39,18 @@ func (i ChatInteractor) ShowHelp(msg domain.SlackMessage) (err error) {
 }
 
 func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage) (err error) {
-	// TODO
-	// times, err := i.DatabaseInfrastructure.SelectPullRequestTTLs(...)
-	times := []time.Duration{
-		time.Hour * 1,
-		time.Hour * 2,
-		time.Hour * 3,
-		time.Hour * 4,
-		time.Hour * 5,
+	if len(msg.Commands) < 4 {
+		err = i.ChatInfrastructure.SendMessageToDefaultChannel(invalidCommandSlackMessage)
+		return
 	}
+	organization := msg.Commands[1]
+	repository := msg.Commands[2]
+	period, err := strconv.Atoi(msg.Commands[3])
+	if err != nil {
+		return
+	}
+
+	times, err := i.DatabaseInfrastructure.SelectPullRequestTTLs(organization, repository, period)
 
 	filepath, err := i.ImageInfrastructure.CreateGraphWithReviewWaitTime(times)
 	if err != nil {
