@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	requestLabel  = "review"
-	reviewedLabel = "wip"
+	timestampFormat = "1970-01-01 00:00:00"
+	requestLabel    = "review"
+	reviewedLabel   = "wip"
 )
 
 // DatabaseInfrastructure is Infrastructure
@@ -47,7 +48,7 @@ func (r DatabaseInfrastructure) ClosePullRequest(userName, organizationName, rep
 		return
 	}
 
-	query := `UPDATE pullrequests SET state = "close" WHERE repository_id = ? AND issue_id = ?`
+	query := `UPDATE pullrequests SET state = "close", closed_at = NOW() WHERE repository_id = ? AND issue_id = ? AND closed_at is NULL`
 	_, err = r.DB.Exec(query, repositoryID, issueID)
 	return
 }
@@ -62,7 +63,7 @@ func (r DatabaseInfrastructure) MergePullRequest(userName, organizationName, rep
 		return
 	}
 
-	query := `UPDATE pullrequests SET state = "merge" WHERE repository_id = ? AND issue_id = ?`
+	query := `UPDATE pullrequests SET state = "merge", closed_at = NOW() WHERE repository_id = ? AND issue_id = ? AND closed_at is NULL`
 	_, err = r.DB.Exec(query, repositoryID, issueID)
 	return
 }
@@ -256,7 +257,7 @@ WHERE r.organization = ? AND r.repository = ? AND p.issue_id = ?
 
 func (r DatabaseInfrastructure) SelectPullRequestTTLs(organizationName, repositoryName string, period int) (durations []time.Duration, err error) {
 	query := `
-SELECT p.id, a.requested_at, a.reviewed_at
+SELECT p.issue_id, a.requested_at, a.reviewed_at
 FROM repositories AS r
 JOIN pullrequests AS p ON r.id = p.repository_id
 JOIN actions AS a ON p.id = a.pullreq_id
@@ -264,12 +265,13 @@ WHERE r.organization = ? AND r.repository = ? AND p.closed_at > ?
 `
 
 	timestamps := []struct {
-		PullRequestID uint       `db:"id"`
-		RequestedAt   *time.Time `db:"requested_at"`
-		ReviewedAt    *time.Time `db:"reviewed_at"`
+		IssueID     uint       `db:"issue_id"`
+		RequestedAt *time.Time `db:"requested_at"`
+		ReviewedAt  *time.Time `db:"reviewed_at"`
 	}{}
-	err = r.DB.Select(&timestamps, query, organizationName, repositoryName, time.Now().AddDate(0, 0, -1*period))
+	err = r.DB.Select(&timestamps, query, organizationName, repositoryName, time.Now().AddDate(0, 0, -1*period).Format(timestampFormat))
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	durationsMap := make(map[uint]time.Duration, 128)
@@ -277,7 +279,7 @@ WHERE r.organization = ? AND r.repository = ? AND p.closed_at > ?
 		if timestamp.RequestedAt == nil || timestamp.ReviewedAt == nil {
 			continue
 		}
-		durationsMap[timestamp.PullRequestID] += timestamp.ReviewedAt.Sub(*timestamp.RequestedAt)
+		durationsMap[timestamp.IssueID] += timestamp.ReviewedAt.Sub(*timestamp.RequestedAt)
 	}
 	for _, val := range durationsMap {
 		durations = append(durations, val)

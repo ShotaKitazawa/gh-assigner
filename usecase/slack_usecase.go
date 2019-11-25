@@ -39,18 +39,22 @@ func (i ChatInteractor) ShowHelp(msg domain.SlackMessage) (err error) {
 }
 
 func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage) (err error) {
-	if len(msg.Commands) < 4 {
-		err = i.ChatInfrastructure.SendMessageToDefaultChannel(invalidCommandSlackMessage)
+	if len(msg.Commands) < 5 {
+		err = i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
 		return
 	}
-	organization := msg.Commands[1]
-	repository := msg.Commands[2]
-	period, err := strconv.Atoi(msg.Commands[3])
+	organization := msg.Commands[2]
+	repository := msg.Commands[3]
+	period, err := strconv.Atoi(msg.Commands[4])
 	if err != nil {
+		err = i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
 		return
 	}
 
 	times, err := i.DatabaseInfrastructure.SelectPullRequestTTLs(organization, repository, period)
+	if err != nil {
+		return
+	}
 
 	filepath, err := i.ImageInfrastructure.CreateGraphWithReviewWaitTime(times)
 	if err != nil {
