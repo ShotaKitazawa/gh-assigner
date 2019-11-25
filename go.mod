@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/jinzhu/gorm v1.9.10
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/nlopes/slack v0.6.0
+	github.com/nlopes/slack v0.6.1-0.20191106133607-d06c2a2b3249
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0
