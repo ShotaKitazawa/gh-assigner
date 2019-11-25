@@ -17,7 +17,7 @@ type DatabaseInfrastructure interface {
 	CreateRequestAction(string, string, string, uint) error
 	CreateReviewedAction(string, string, string, uint) error
 	GetPullRequestTTL(string, string, uint) (time.Duration, error)
-	SelectPullRequestTTLs(string, string, int) ([]time.Duration, error)
+	SelectPullRequestTTLs(string, string, int) (map[uint]time.Duration, error)
 }
 
 type CalendarInfrastructure interface {
@@ -32,6 +32,6 @@ type ChatInfrastructure interface {
 }
 
 type ImageInfrastructure interface {
-	CreateGraphWithReviewWaitTime([]time.Duration) (string, error)
+	CreateGraphWithReviewWaitTime(map[uint]time.Duration) (string, error)
 	DeleteFile(string) error
 }

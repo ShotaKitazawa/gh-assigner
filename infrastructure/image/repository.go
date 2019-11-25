@@ -1,18 +1,19 @@
 package image
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 )
 
 const (
 	titleReviewWaitTime = "Review Wait Time"
-	xReviewWaitTime     = "Number of Reviewed PR"
+	xReviewWaitTime     = "Reviewed PR ID"
 	yReviewWaitTime     = "Minutes"
 )
 
@@ -21,7 +22,7 @@ type ImageInfrastructure struct {
 	Path string
 }
 
-func (r ImageInfrastructure) CreateGraphWithReviewWaitTime(times []time.Duration) (filepath string, err error) {
+func (r ImageInfrastructure) CreateGraphWithReviewWaitTime(times map[uint]time.Duration) (filepath string, err error) {
 	dirname, err := r.Initialize()
 	if err != nil {
 		return
@@ -36,16 +37,21 @@ func (r ImageInfrastructure) CreateGraphWithReviewWaitTime(times []time.Duration
 	p.X.Label.Text = xReviewWaitTime
 	p.Y.Label.Text = yReviewWaitTime
 
-	pts := make(plotter.XYs, len(times))
+	var nominal []string
+	var pts plotter.Values
 	for idx, val := range times {
-		pts[idx].X = float64(idx + 1)
-		pts[idx].Y = float64(int64(val / time.Minute))
+		nominal = append(nominal, strconv.Itoa(int(idx)))
+		pts = append(pts, float64(int64(val/time.Minute)))
+	}
+	if len(nominal) != 0 {
+		p.NominalX(nominal...)
 	}
 
-	err = plotutil.AddLinePoints(p, "", pts)
+	bars, err := plotter.NewBarChart(pts, vg.Points(20))
 	if err != nil {
 		return
 	}
+	p.Add(bars)
 
 	imagePath := joinPath(dirname, randString(8)+".png")
 
