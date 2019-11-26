@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"time"

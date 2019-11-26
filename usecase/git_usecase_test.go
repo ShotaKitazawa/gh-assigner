@@ -14,6 +14,7 @@ func TestMain(m *testing.M) {
 type GitInfrastructureMock struct{}
 type DatabaseInfrastructureMock struct{}
 type CalendarInfrastructureMock struct{}
+type ChatInfrastructureMock struct{}
 
 func newGitInteractor() *GitInteractor {
 	return &GitInteractor{
@@ -68,6 +69,16 @@ func (r DatabaseInfrastructureMock) GetPullRequestTTL(organizationName, reposito
 	return 0, nil
 }
 
+func (r DatabaseInfrastructureMock) SelectPullRequestTTLs(organizationName, repositoryName string, period int) (map[uint]time.Duration, error) {
+	// TODO
+	return nil, nil
+}
+
+func (r DatabaseInfrastructureMock) GetPullRequestURL(organizationName, repositoryName string, issueID uint) (string, error) {
+	// TODO
+	return "", nil
+}
+
 func (r CalendarInfrastructureMock) GetCurrentStaff() (string, error) {
 	// TODO
 	return "", nil
@@ -78,6 +89,14 @@ func (r ChatInfrastructureMock) SendMessage(string, string) error {
 	return nil
 }
 func (r ChatInfrastructureMock) SendMessageToDefaultChannel(string) error {
+	// TODO
+	return nil
+}
+func (r ChatInfrastructureMock) SendImage(string, string) error {
+	// TODO
+	return nil
+}
+func (r ChatInfrastructureMock) SendImageToDefaultChannel(string) error {
 	// TODO
 	return nil
 }

@@ -284,3 +284,10 @@ WHERE r.domain = ? AND r.organization = ? AND r.repository = ? AND p.closed_at >
 
 	return
 }
+
+func (r DatabaseInfrastructure) GetPullRequestURL(organizationName, repositoryName string, issueID uint) (string, error) {
+	schema := "https://"
+	hostname := "github.com"
+	path := strings.Join([]string{organizationName, repositoryName, "pull", string(issueID)}, "/")
+	return schema + hostname + path, nil
+}
