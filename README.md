@@ -4,7 +4,9 @@
 
 # Architecture
 
-<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/architecture.png" width="400px">
+<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/architecture01.png" width="400px">
+
+<img src="https://github.com/ShotaKitazawa/gh-assigner/blob/images/architecture02.png" width="400px">
 
 # Usage
 
