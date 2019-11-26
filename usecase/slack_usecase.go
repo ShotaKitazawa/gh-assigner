@@ -78,7 +78,7 @@ func (i ChatInteractor) Pong(msg domain.SlackMessage) (err error) {
 }
 
 func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage) (err error) {
-	if len(msg.Commands) < 5 {
+	if len(msg.Commands) < 4 {
 		// Send command-miss Message To Slack
 		return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
 	}
