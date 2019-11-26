@@ -119,6 +119,7 @@ func (c GitHubWebhookController) PostWebhook(ctx *gin.Context) (err error) {
 		}
 	default:
 		c.Logger.Info(fmt.Sprintf("X-GitHub-Event: %s: Skiped.", ctx.Request.Header.Get("X-GitHub-Event")))
+		ctx.JSON(http.StatusForbidden, nil)
 	}
 	return nil
 }

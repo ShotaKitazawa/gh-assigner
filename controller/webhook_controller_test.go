@@ -5,20 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ShotaKitazawa/gh-assigner/domain"
 )
-
-func TestMain(m *testing.M) {
-	code := m.Run()
-	os.Exit(code)
-}
 
 var (
 	flagOpenPullRequest  = false
@@ -28,33 +21,43 @@ var (
 	flagCommentReviewed  = false
 )
 
-type InteractorMock struct{}
+type GitHubWebhookControllerInteractorMock struct{}
+type GitHubWebhookControllerLoggerMock struct{}
 
-func newController() *GitHubWebhookController {
+func newGitHubWebhookController() *GitHubWebhookController {
 	return &GitHubWebhookController{
-		Interactor: &InteractorMock{},
+		Interactor: &GitHubWebhookControllerInteractorMock{},
+		Logger:     &GitHubWebhookControllerLoggerMock{},
 	}
 }
-func (i InteractorMock) OpenPullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
+func (i GitHubWebhookControllerInteractorMock) OpenPullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagOpenPullRequest = true
 	return domain.GitHubPullRequestResponse{}, nil
 }
-func (i InteractorMock) MergePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
+func (i GitHubWebhookControllerInteractorMock) MergePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagMergePullRequest = true
 	return domain.GitHubPullRequestResponse{}, nil
 }
-func (i InteractorMock) ClosePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
+func (i GitHubWebhookControllerInteractorMock) ClosePullRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagClosePullRequest = true
 	return domain.GitHubPullRequestResponse{}, nil
 }
 
-func (i InteractorMock) CommentRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
+func (i GitHubWebhookControllerInteractorMock) CommentRequest(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagCommentRequest = true
 	return domain.GitHubPullRequestResponse{}, nil
 }
-func (i InteractorMock) CommentReviewed(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
+func (i GitHubWebhookControllerInteractorMock) CommentReviewed(domain.GitHubPullRequest) (domain.GitHubPullRequestResponse, error) {
 	flagCommentReviewed = true
 	return domain.GitHubPullRequestResponse{}, nil
+}
+func (l GitHubWebhookControllerLoggerMock) Debug(args ...interface{}) {
+}
+func (l GitHubWebhookControllerLoggerMock) Info(args ...interface{}) {
+}
+func (l GitHubWebhookControllerLoggerMock) Warn(args ...interface{}) {
+}
+func (l GitHubWebhookControllerLoggerMock) Error(args ...interface{}) {
 }
 
 func TestGitHubWebhookController(t *testing.T) {
@@ -73,8 +76,8 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
 			// Create Body & Header
-			body, err := json.Marshal(PullRequestEvent{
-				Action: "opened",
+			body, err := json.Marshal(map[string]interface{}{
+				"action": "opened",
 			})
 			assert.Nil(t, err)
 			req, err := http.NewRequest(
@@ -88,77 +91,77 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx.Request = req
 
 			// call
-			controller := newController()
+			controller := newGitHubWebhookController()
 			controller.PostWebhook(ctx)
 
 			// assert
 			assert.Equal(t, flagOpenPullRequest, true)
 			assert.Equal(t, responseWriter.Code, http.StatusOK)
 		})
-		/*
-			t.Run("PullRequestをMergeするとinteractor.MergePullRequest()が呼ばれることのテスト", func(t *testing.T) {
-				// Initialize
-				t.Parallel()
-				responseWriter := httptest.NewRecorder()
-				ctx, _ := gin.CreateTestContext(responseWriter)
+		t.Run("PullRequestをMergeするとinteractor.MergePullRequest()が呼ばれることのテスト", func(t *testing.T) {
+			// Initialize
+			t.Parallel()
+			responseWriter := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(responseWriter)
 
-				// Create Body & Header
-				// TODO: marshal に interface を渡す
-				body, err := json.Marshal(domain.PullRequestEvent{
-					Action:      "closed",
-					PullRequest: GitHubPullRequest{Merged: true},
-				})
-				assert.Nil(t, err)
-				req, err := http.NewRequest(
-					"POST",
-					"http://localhost:8080/",
-					bytes.NewBuffer(body),
-				)
-				assert.Nil(t, err)
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("X-GitHub-Event", "pull_request")
-				ctx.Request = req
-
-				// call
-				controller := newController()
-				controller.PostWebhook(ctx)
-
-				// assert
-				assert.Equal(t, flagMergePullRequest, true)
-				assert.Equal(t, responseWriter.Code, http.StatusOK)
+			// Create Body & Header
+			body, err := json.Marshal(map[string]interface{}{
+				"action": "closed",
+				"pull_request": map[string]interface{}{
+					"merged": true,
+				},
 			})
-			t.Run("PullRequestをCloseするとinteractor.ClosePullRequest()が呼ばれることのテスト", func(t *testing.T) {
-				// Initialize
-				t.Parallel()
-				responseWriter := httptest.NewRecorder()
-				ctx, _ := gin.CreateTestContext(responseWriter)
+			assert.Nil(t, err)
+			req, err := http.NewRequest(
+				"POST",
+				"http://localhost:8080/",
+				bytes.NewBuffer(body),
+			)
+			assert.Nil(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("X-GitHub-Event", "pull_request")
+			ctx.Request = req
 
-				// Create Body & Header
-				// TODO: marshal に interface を渡す
-				body, err := json.Marshal(domain.PullRequestEvent{
-					Action: "closed",
-					PullRequest: GitHubPullRequest{Merged: true},
-				})
-				assert.Nil(t, err)
-				req, err := http.NewRequest(
-					"POST",
-					"http://localhost:8080/",
-					bytes.NewBuffer(body),
-				)
-				assert.Nil(t, err)
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("X-GitHub-Event", "pull_request")
-				ctx.Request = req
+			// call
+			controller := newGitHubWebhookController()
+			controller.PostWebhook(ctx)
 
-				// call
-				controller := newController()
-				controller.PostWebhook(ctx)
+			// assert
+			assert.Equal(t, flagMergePullRequest, true)
+			assert.Equal(t, responseWriter.Code, http.StatusOK)
+		})
+		t.Run("PullRequestをCloseするとinteractor.ClosePullRequest()が呼ばれることのテスト", func(t *testing.T) {
+			// Initialize
+			t.Parallel()
+			responseWriter := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(responseWriter)
 
-				// assert
-				assert.Equal(t, flagClosePullRequest, true)
-				assert.Equal(t, responseWriter.Code, http.StatusOK)
+			// Create Body & Header
+			body, err := json.Marshal(map[string]interface{}{
+				"action": "closed",
+				"pull_request": map[string]interface{}{
+					"merged": false,
+				},
 			})
-		*/
+			assert.Nil(t, err)
+			req, err := http.NewRequest(
+				"POST",
+				"http://localhost:8080/",
+				bytes.NewBuffer(body),
+			)
+			assert.Nil(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("X-GitHub-Event", "pull_request")
+			ctx.Request = req
+
+			// call
+			controller := newGitHubWebhookController()
+			controller.PostWebhook(ctx)
+
+			// assert
+			assert.Equal(t, flagClosePullRequest, true)
+			assert.Equal(t, responseWriter.Code, http.StatusOK)
+		})
 		t.Run("PullRequestに'/request'とCommentするとinteractor.CommentRequest()が呼ばれることのテスト", func(t *testing.T) {
 			// Initialize
 			t.Parallel()
@@ -166,9 +169,11 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
 			// Create Body & Header
-			body, err := json.Marshal(IssueCommentEvent{
-				Action:  "created",
-				Comment: GitHubComment{Body: "/request"},
+			body, err := json.Marshal(map[string]interface{}{
+				"action": "created",
+				"comment": map[string]interface{}{
+					"body": "/request",
+				},
 			})
 			assert.Nil(t, err)
 			req, err := http.NewRequest(
@@ -182,7 +187,7 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx.Request = req
 
 			// call
-			controller := newController()
+			controller := newGitHubWebhookController()
 			controller.PostWebhook(ctx)
 
 			// assert
@@ -196,9 +201,11 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(responseWriter)
 
 			// Create Body & Header
-			body, err := json.Marshal(IssueCommentEvent{
-				Action:  "created",
-				Comment: GitHubComment{Body: "/reviewed"},
+			body, err := json.Marshal(map[string]interface{}{
+				"action": "created",
+				"comment": map[string]interface{}{
+					"body": "/reviewed",
+				},
 			})
 			assert.Nil(t, err)
 			req, err := http.NewRequest(
@@ -212,28 +219,40 @@ func TestGitHubWebhookController(t *testing.T) {
 			ctx.Request = req
 
 			// call
-			controller := newController()
+			controller := newGitHubWebhookController()
 			controller.PostWebhook(ctx)
 
 			// assert
 			assert.Equal(t, flagCommentReviewed, true)
 			assert.Equal(t, responseWriter.Code, http.StatusOK)
 		})
-		t.Run("リポジトリのPushをしても何も発火しないことのテスト", func(t *testing.T) {
-			// TODO
+		t.Run("リポジトリのPush(未対応のイベント)のwebhookには403を返すことのテスト", func(t *testing.T) {
+			// Initialize
+			t.Parallel()
+			responseWriter := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(responseWriter)
+
+			// Create Body & Header
+			body, err := json.Marshal(map[string]interface{}{
+				"dummy": "dummy",
+			})
+			assert.Nil(t, err)
+			req, err := http.NewRequest(
+				"POST",
+				"http://localhost:8080/",
+				bytes.NewBuffer(body),
+			)
+			assert.Nil(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("X-GitHub-Event", "push")
+			ctx.Request = req
+
+			// call
+			controller := newGitHubWebhookController()
+			controller.PostWebhook(ctx)
+
+			// assert
+			assert.Equal(t, responseWriter.Code, http.StatusForbidden)
 		})
 	})
-}
-
-type GitHubComment struct {
-	URL               string     `json:"url"`
-	HTMLURL           string     `json:"html_url"`
-	IssueURL          string     `json:"issue_url"`
-	ID                int        `json:"id"`
-	NodeID            string     `json:"node_id"`
-	User              GitHubUser `json:"user"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
-	AuthorAssociation string     `json:"author_association"`
-	Body              string     `json:"body"`
 }
