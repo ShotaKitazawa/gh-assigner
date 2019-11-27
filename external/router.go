@@ -41,7 +41,8 @@ func httpRunner(ctx context.Context) {
 	r := gin.New()
 	r.Use(gin.Recovery(), Log())
 
-	r.POST("/", func(c *gin.Context) { githubWebhookController.PostWebhook(c) })
+	g := r.Group("/webhook")
+	g.POST("/github", func(c *gin.Context) { githubWebhookController.PostWebhook(c) })
 
 	host, err := getContextString(ctx, hostContextKey)
 	if err != nil {
