@@ -39,6 +39,11 @@ func (r GitInfrastructureMock) UnlabelIssue(url string) error {
 	return nil
 }
 
+func (r GitInfrastructureMock) GetPullRequestURL(organizationName, repositoryName string, issueID uint) (string, error) {
+	// TODO
+	return "", nil
+}
+
 func (r DatabaseInfrastructureMock) CreatePullRequest(username, organizationName, repositoryName string, issueID uint, title string) error {
 	// TODO
 	return nil
@@ -72,11 +77,6 @@ func (r DatabaseInfrastructureMock) GetPullRequestTTL(organizationName, reposito
 func (r DatabaseInfrastructureMock) SelectPullRequestTTLs(organizationName, repositoryName string, period int) (map[uint]time.Duration, error) {
 	// TODO
 	return nil, nil
-}
-
-func (r DatabaseInfrastructureMock) GetPullRequestURL(organizationName, repositoryName string, issueID uint) (string, error) {
-	// TODO
-	return "", nil
 }
 
 func (r CalendarInfrastructureMock) GetCurrentStaff() (string, error) {

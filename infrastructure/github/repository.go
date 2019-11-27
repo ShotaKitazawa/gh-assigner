@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/ShotaKitazawa/gh-assigner/infrastructure/interfaces"
 )
@@ -126,4 +128,12 @@ func (r GitInfrastructure) UnlabelIssue(url string) error {
 	}
 
 	return nil
+}
+
+// GetPullRequestURL is getting PullRequestID based organizationName & repositoryName & issueID
+func (r GitInfrastructure) GetPullRequestURL(organizationName, repositoryName string, issueID uint) (string, error) {
+	schema := "https://"
+	hostname := "github.com/"
+	path := strings.Join([]string{organizationName, repositoryName, "pull", strconv.Itoa(int(issueID))}, "/")
+	return schema + hostname + path, nil
 }

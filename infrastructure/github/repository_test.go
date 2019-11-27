@@ -246,6 +246,16 @@ func TestGitHubInfrastructure(t *testing.T) {
 			assert.NotNil(t, err)
 		})
 	})
+	t.Run("GetPullRequestURL()", func(t *testing.T) {
+		t.Run("意図したURLを返すことのテスト", func(t *testing.T) {
+			t.Parallel()
+
+			expected := "https://github.com/ShotaKitazawa/test/pull/2"
+			actual, err := infra.GetPullRequestURL("ShotaKitazawa", "test", 2)
+			assert.Nil(t, err)
+			assert.Equal(t, expected, actual)
+		})
+	})
 }
 
 // for test

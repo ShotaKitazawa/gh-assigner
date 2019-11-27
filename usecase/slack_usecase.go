@@ -38,9 +38,9 @@ var (
 > %[1]s%[4]s%[1]s
 ヘルプ出力
 `, "`",
-		"`%[1]s "+CommandPing+"`",
-		"`%[1]s "+CommandReviewTTL+" "+CommandReviewTTLOption+"`",
-		"`%[1]s "+CommandHelp+"`",
+		"%[1]s "+CommandPing,
+		"%[1]s "+CommandReviewTTL+" "+CommandReviewTTLOption,
+		"%[1]s "+CommandHelp,
 	)
 )
 
@@ -83,7 +83,7 @@ func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage
 		return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
 	}
 	//General form
-	u, err := url.Parse(msg.Commands[2])
+	u, err := url.Parse(strings.TrimRight(strings.TrimLeft(msg.Commands[2], "<"), ">"))
 	if err != nil {
 		// Send command-miss Message To Slack
 		return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
@@ -106,12 +106,12 @@ func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage
 	// Send TTL info
 	var reviewWaitTimeMsg string
 	for id, time := range times {
-		issueURL, err := i.DatabaseInfrastructure.GetPullRequestURL(organization, repository, id)
+		issueURL, err := i.GitInfrastructure.GetPullRequestURL(organization, repository, id)
 		if err != nil {
 			// Send command-miss Message To Slack
 			return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
 		}
-		reviewWaitTimeMsg += fmt.Sprintf("> %s\n%v\n", issueURL, time)
+		reviewWaitTimeMsg += fmt.Sprintf("%s\n> %v\n", issueURL, time)
 	}
 	err = i.ChatInfrastructure.SendMessage(reviewWaitTimeMsg, msg.ChannelID)
 	if err != nil {

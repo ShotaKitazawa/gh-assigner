@@ -8,6 +8,7 @@ type GitInfrastructure interface {
 	PostMessageToIssue(string, string) error
 	LabelAndAssignIssue(string, string, string) error
 	UnlabelIssue(string) error
+	GetPullRequestURL(string, string, uint) (string, error)
 }
 
 type DatabaseInfrastructure interface {
@@ -18,7 +19,6 @@ type DatabaseInfrastructure interface {
 	CreateReviewedAction(string, string, string, uint) error
 	GetPullRequestTTL(string, string, uint) (time.Duration, error)
 	SelectPullRequestTTLs(string, string, int) (map[uint]time.Duration, error)
-	GetPullRequestURL(string, string, uint) (string, error)
 }
 
 type CalendarInfrastructure interface {
