@@ -64,9 +64,6 @@ func (r ImageInfrastructure) CreateGraphWithReviewWaitTime(times map[uint]time.D
 }
 
 func (r ImageInfrastructure) DeleteFile(filepath string) (err error) {
-	if err != nil {
-		return
-	}
 	return os.Remove(filepath)
 }
 
