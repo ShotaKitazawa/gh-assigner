@@ -13,6 +13,6 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 # Copy app binary from above image (golang:1.13.3)
-COPY --from=0 /go/src/github.com/tamac-io/sre-sampleapp/app .
+COPY --from=0 /go/src/github.com/ShotaKitazawa/gh-assigner/app .
 # Run
 ENTRYPOINT ["./app"]
