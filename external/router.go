@@ -3,10 +3,12 @@ package external
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql" //justifying
 	"github.com/nlopes/slack"
+	"github.com/robfig/cron"
 
 	"github.com/ShotaKitazawa/gh-assigner/external/slackrtm"
 )
@@ -71,4 +73,24 @@ func slackRunner(ctx context.Context) {
 	c := slackrtm.New(token, channels, botID)
 
 	slackRunnnerChan <- c.Run(func(ev *slack.MessageEvent) { slackRTMController.MessageEvent(ev) })
+}
+
+func cronRunner(ctx context.Context) {
+	cronController := NewCronController(ctx)
+
+	crontab, err := getContextString(ctx, crontabContextKey)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO
+	c := context.Background()
+	c = context.WithValue(c, "", "")
+
+	cr := cron.New()
+	cr.AddFunc(crontab, func() { cronController.Event(c) })
+	cr.Start()
+	for {
+		time.Sleep(time.Second)
+	}
 }

@@ -150,3 +150,36 @@ func NewSlackRTMController(ctx context.Context) *controller.SlackRTMController {
 		Logger: &Logger{},
 	}
 }
+
+// NewCronController is initialize Controller, Interactor and Infrastructure.
+func NewCronController(ctx context.Context) *controller.CronController {
+	return &controller.CronController{
+		Interactor: &usecase.CronInteractor{
+			GitInfrastructure: &github.GitInfrastructure{
+				Client: &http.Client{Timeout: time.Duration(10) * time.Second},
+				User:   ghUser,
+				Token:  ghToken,
+				Logger: &Logger{},
+			},
+			DatabaseInfrastructure: &mysql.DatabaseInfrastructure{
+				DB:     db,
+				Logger: &Logger{},
+			},
+			ChatInfrastructure: &slackrepo.ChatInfrastructure{
+				Client:  slackClient,
+				Channel: slackDefaultChannel,
+				Logger:  &Logger{},
+			},
+			CalendarInfrastructure: &googlecalendar.CalendarInfrastructure{
+				ID:      calendarID,
+				Service: calendarService,
+				Logger:  &Logger{},
+			},
+			ImageInfrastructure: &image.ImageInfrastructure{
+				Path: currentPath + "/images",
+			},
+			Logger: &Logger{},
+		},
+		Logger: &Logger{},
+	}
+}

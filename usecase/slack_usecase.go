@@ -10,40 +10,6 @@ import (
 	"github.com/ShotaKitazawa/gh-assigner/usecase/interfaces"
 )
 
-// Commands & Options
-const (
-	CommandPing            = "ping"
-	CommandReviewTTL       = "review-ttl"
-	CommandReviewTTLOption = "<RepositoryURL> <Period>"
-	CommandHelp            = "help"
-)
-
-// message displayed to Chat
-var (
-	DefaultMessage = fmt.Sprintf(`
-コマンドが存在しません。 以下のコマンドよりヘルプメッセージを確認してください。
-> %[1]s%[2]s%[1]s
-`, "`", "%[1]s "+CommandHelp)
-
-	invalidCommandSlackMessage = fmt.Sprintf(`
-コマンドの引数が誤っています。以下のコマンドよりヘルプメッセージを確認してください。
-> %[1]s%[2]s%[1]s
-`, "`", "%[1]s "+CommandHelp)
-
-	HelpMessage = fmt.Sprintf(`
-> %[1]s%[2]s%[1]s
-疎通確認
-> %[1]s%[3]s%[1]s
-<Period> 日前までにCloseしたPullRequestにおけるレビュー時間の取得
-> %[1]s%[4]s%[1]s
-ヘルプ出力
-`, "`",
-		"%[1]s "+CommandPing,
-		"%[1]s "+CommandReviewTTL+" "+CommandReviewTTLOption,
-		"%[1]s "+CommandHelp,
-	)
-)
-
 // ChatInteractor is Interactor
 type ChatInteractor struct {
 	GitInfrastructure      interfaces.GitInfrastructure
@@ -80,13 +46,12 @@ func (i ChatInteractor) Pong(msg domain.SlackMessage) (err error) {
 func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage) (err error) {
 	if len(msg.Commands) < 4 {
 		// Send command-miss Message To Slack
-		return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
+		return i.ChatInfrastructure.SendMessage(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]), msg.ChannelID)
 	}
-	//General form
 	u, err := url.Parse(strings.TrimRight(strings.TrimLeft(msg.Commands[2], "<"), ">"))
 	if err != nil {
 		// Send command-miss Message To Slack
-		return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
+		return i.ChatInfrastructure.SendMessage(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]), msg.ChannelID)
 	}
 	organization := strings.Split(u.Path, "/")[1]
 	repository := strings.Split(u.Path, "/")[2]
@@ -94,7 +59,7 @@ func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage
 	period, err := strconv.Atoi(msg.Commands[3])
 	if err != nil {
 		// Send command-miss Message To Slack
-		return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
+		return i.ChatInfrastructure.SendMessage(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]), msg.ChannelID)
 	}
 
 	// Get PullRequest TTL last `period` days
@@ -109,7 +74,7 @@ func (i ChatInteractor) SendImageWithReviewWaitTimeGraph(msg domain.SlackMessage
 		issueURL, err := i.GitInfrastructure.GetPullRequestURL(organization, repository, id)
 		if err != nil {
 			// Send command-miss Message To Slack
-			return i.ChatInfrastructure.SendMessageToDefaultChannel(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]))
+			return i.ChatInfrastructure.SendMessage(fmt.Sprintf(invalidCommandSlackMessage, msg.Commands[0]), msg.ChannelID)
 		}
 		reviewWaitTimeMsg += fmt.Sprintf("%s\n> %v\n", issueURL, time)
 	}

@@ -20,3 +20,6 @@ type ChatInteractor interface {
 	ShowHelp(domain.SlackMessage) error
 	SendImageWithReviewWaitTimeGraph(domain.SlackMessage) error
 }
+
+type CronInteractor interface {
+}

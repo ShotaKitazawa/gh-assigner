@@ -20,6 +20,7 @@ slack-bot-token: <slack-bot-token>
 slack-channel-ids: <slack-channel-id>,<slack-channel-id>,...
 slack-default-channel-id: <slack-channel-id>
 google-calendar-id: <google-calendar-id>
+crontab: 0 10 * * *
 ```
 
 * run

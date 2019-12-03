@@ -20,6 +20,7 @@ const (
 	slackTokenContextKey          contextKey = "slack_token"
 	gcpCredentialContextKey       contextKey = "gcp_credential"
 	googleCalendarContextKey      contextKey = "google_calendar"
+	crontabContextKey             contextKey = "crontab"
 )
 
 func getContextString(ctx context.Context, key contextKey) (result string, err error) {

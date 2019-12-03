@@ -39,6 +39,7 @@ var rootCmd = &cobra.Command{
 		ctx = context.WithValue(ctx, slackDefaultChannelContextKey, viper.GetString("slack-default-channel-id"))
 		ctx = context.WithValue(ctx, googleCalendarContextKey, viper.GetString("google-calendar-id"))
 		ctx = context.WithValue(ctx, gcpCredentialContextKey, viper.GetString("gcp-credential-path"))
+		ctx = context.WithValue(ctx, crontabContextKey, viper.GetString("crontab"))
 
 		// Run
 		Run(ctx)
@@ -72,6 +73,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("slack-default-channel-id", "", "", "Slack Channel ID to send message by bot initiatively")
 	rootCmd.PersistentFlags().StringP("google-calendar-id", "", "", "GoogleCalendar ID")
 	rootCmd.PersistentFlags().StringP("gcp-credential-path", "c", "", "Path to GCP Credential using to read GoogleCalendar")
+	rootCmd.PersistentFlags().StringP("crontab", "", "", "Time when chat message is sent")
 
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "f", "", "Path to config file")
 	viper.BindPFlag("bind-address", rootCmd.PersistentFlags().Lookup("bind-address"))
@@ -89,6 +91,7 @@ func init() {
 	viper.BindPFlag("slack-bot-token", rootCmd.PersistentFlags().Lookup("slack-bot-token"))
 	viper.BindPFlag("google-calendar-id", rootCmd.PersistentFlags().Lookup("google-calendar-id"))
 	viper.BindPFlag("gcp-credential-path", rootCmd.PersistentFlags().Lookup("gcp-credential-path"))
+	viper.BindPFlag("crontab", rootCmd.PersistentFlags().Lookup("crontab"))
 }
 
 // Execute is entrypoint
